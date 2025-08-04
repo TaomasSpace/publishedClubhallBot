@@ -31,7 +31,7 @@ active_giveaway_tasks: dict[int, asyncio.Task] = {}
 filtered_violations: dict[int, dict[int, list[float]]] = {}
 trigger_responses: dict[int, dict[str, str]] = {}
 
-ERROR_LOG_CHANNEL_ID = 1373912883527815262
+ERROR_LOG_CHANNEL_ID = 1401958839007445033
 
 
 async def end_giveaway(
@@ -138,9 +138,7 @@ async def on_member_update(
                     except Exception:
                         message = template
                 else:
-                    message = (
-                        f"🎉 {after.mention} just boosted the server — thank you so much for the support! 💜"
-                    )
+                    message = f"🎉 {after.mention} just boosted the server — thank you so much for the support! 💜"
                 await channel.send(message)
 
 
@@ -172,9 +170,7 @@ async def on_message(
             except discord.Forbidden:
                 return
             now = datetime.now().timestamp()
-            guild_violations = filtered_violations.setdefault(
-                message.guild.id, {}
-            )
+            guild_violations = filtered_violations.setdefault(message.guild.id, {})
             history = guild_violations.setdefault(message.author.id, [])
             history.append(now)
             history = [t for t in history if now - t <= 60]
@@ -346,7 +342,9 @@ async def on_command_error(
     )
     cmd_name = ctx.command.qualified_name if ctx.command else "Unknown"
     embed.add_field(name="Command", value=cmd_name)
-    embed.add_field(name="User", value=f"{ctx.author} (`{ctx.author.id}`)", inline=False)
+    embed.add_field(
+        name="User", value=f"{ctx.author} (`{ctx.author.id}`)", inline=False
+    )
     embed.add_field(name="Channel", value=ctx.channel.mention, inline=False)
     if ctx.guild:
         embed.add_field(
@@ -442,7 +440,9 @@ def setup(bot: commands.Bot, lowercase_locked: dict[int, set[int]]):
     async def app_error_wrapper(inter: discord.Interaction, error: Exception):
         await on_app_error(bot, inter, error)
 
-    async def command_error_wrapper(ctx: commands.Context, error: commands.CommandError):
+    async def command_error_wrapper(
+        ctx: commands.Context, error: commands.CommandError
+    ):
         await on_command_error(bot, ctx, error)
 
     bot.add_listener(ready_wrapper, name="on_ready")
