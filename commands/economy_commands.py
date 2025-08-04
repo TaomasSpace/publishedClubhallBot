@@ -114,6 +114,7 @@ def _evaluate_hand(cards: list[tuple[int, str]]) -> tuple:
         return (1, pair, kick[0], kick[1], kick[2])
     return (0, ranks[:5])
 
+
 from config import (
     WEEKLY_REWARD,
     DAILY_REWARD,
@@ -460,9 +461,7 @@ async def start_poker_game(
 
     ranks: dict[int, tuple] = {}
     for pid in active:
-        cards = [
-            _parse_card(c) for c in hands[pid] + community
-        ]
+        cards = [_parse_card(c) for c in hands[pid] + community]
         ranks[pid] = _evaluate_hand(cards)
 
     best = max(ranks.values())
@@ -474,10 +473,9 @@ async def start_poker_game(
     text = f"Community: {' '.join(community)}\n"
     for pid, name in active.items():
         text += f"<@{pid}>: {' '.join(hands[pid])}\n"
-    win_names = ', '.join(f"<@{pid}>" for pid in winners)
+    win_names = ", ".join(f"<@{pid}>" for pid in winners)
     text += f"Winner: {win_names} with {_hand_name(best[0])}! (+{prize} coins)"
     await channel.send(text)
-
 
 
 def setup(bot: commands.Bot):
@@ -499,51 +497,6 @@ def setup(bot: commands.Bot):
             f"{user.display_name} has {money_amt} clubhall coins.", ephemeral=False
         )
 
-    @bot.tree.command(
-        name="give", description="Give coins to a user (Admin/Owner only)"
-    )
-    async def give(interaction: discord.Interaction, user: discord.Member, amount: int):
-        if not has_command_permission(interaction.user, "give", "admin"):
-            await interaction.response.send_message(
-                "You don't have permission to give clubhall coins.",
-                ephemeral=True,
-            )
-            return
-        register_user(str(user.id), user.display_name)
-        added = safe_add_coins(str(user.id), amount)
-        if added == 0:
-            await interaction.response.send_message(
-                "Clubhall coin limit reached. No coins added.", ephemeral=True
-            )
-        elif added < amount:
-            await interaction.response.send_message(
-                f"Partial success: Only {added} coins added due to server limit.",
-                ephemeral=True,
-            )
-        else:
-            await interaction.response.send_message(
-                f"{added} clubhall coins added to {user.display_name}."
-            )
-
-    @bot.tree.command(
-        name="remove",
-        description="Remove clubhall coins from a user (Admin/Owner only)",
-    )
-    async def remove(
-        interaction: discord.Interaction, user: discord.Member, amount: int
-    ):
-        if not has_command_permission(interaction.user, "remove", "admin"):
-            await interaction.response.send_message(
-                "You don't have permission to remove clubhall coins.",
-                ephemeral=True,
-            )
-            return
-        current = get_money(str(user.id))
-        set_money(str(user.id), max(0, current - amount))
-        await interaction.response.send_message(
-            f"{amount} clubhall coins removed from {user.display_name}."
-        )
-
     @bot.tree.command(name="donate", description="Send coins to another user")
     async def donate(
         interaction: discord.Interaction, user: discord.Member, amount: str
@@ -562,9 +515,7 @@ def setup(bot: commands.Bot):
         try:
             amount_int = int(amount)
         except Exception:
-            await interaction.response.send_message(
-                "Invalid amount.", ephemeral=True
-            )
+            await interaction.response.send_message("Invalid amount.", ephemeral=True)
             return
 
         if amount_int <= 0:
@@ -939,7 +890,9 @@ def setup(bot: commands.Bot):
             role = discord.utils.get(guild.roles, name=current)
             if role:
                 try:
-                    await interaction.user.remove_roles(role, reason="Anime title reroll")
+                    await interaction.user.remove_roles(
+                        role, reason="Anime title reroll"
+                    )
                 except discord.Forbidden:
                     pass
 
@@ -1096,9 +1049,7 @@ def setup(bot: commands.Bot):
             )
             return
         if get_money(uid) < bet:
-            await interaction.response.send_message(
-                "Not enough coins.", ephemeral=True
-            )
+            await interaction.response.send_message("Not enough coins.", ephemeral=True)
             return
         view = PokerJoinView(bot, interaction.user.id, bet)
         view.players[interaction.user.id] = interaction.user.display_name
@@ -1108,8 +1059,6 @@ def setup(bot: commands.Bot):
     return (
         money,
         balance,
-        give,
-        remove,
         donate,
         request,
         topcoins,
