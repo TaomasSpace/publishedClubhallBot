@@ -339,7 +339,7 @@ def set_command_permission(guild_id: int, command: str, role_id: int) -> None:
     )
 
 
-def get_command_permissions(guild_id: int) -> dict[str, int]:
+def get_command_permission(guild_id: int) -> dict[str, int]:
     rows = _fetchall(
         "SELECT command, role_id FROM command_permissions WHERE guild_id = ?",
         (guild_id,),
