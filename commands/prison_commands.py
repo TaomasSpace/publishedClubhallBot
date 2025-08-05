@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from typing import List
 
-from db.DBHelper import set_prison_settings
+from db.DBHelper import set_prison_settings, get_prison_role
 
 
 class PrisonSetupView(discord.ui.View):
@@ -156,6 +156,11 @@ class PrisonSetupView(discord.ui.View):
     async def finalize(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True, thinking=True)
 
+        previous_role_id = get_prison_role(self.guild.id)
+        previous_role = (
+            self.guild.get_role(previous_role_id) if previous_role_id else None
+        )
+
         # Save settings
         set_prison_settings(
             self.guild.id,
@@ -194,6 +199,15 @@ class PrisonSetupView(discord.ui.View):
                 await ch.set_permissions(self.guild.default_role, send_messages=True)
             except Exception:
                 pass
+
+        # Replace previous prison role with the new one
+        if previous_role and self.prison_role and previous_role != self.prison_role:
+            for member in self.guild.members:
+                if previous_role in member.roles:
+                    try:
+                        await member.remove_roles(previous_role)
+                    except Exception:
+                        pass
 
         # Assign prison role to all members
         if self.prison_role:
