@@ -823,13 +823,13 @@ def setup(bot: commands.Bot):
 
     @bot.tree.command(name="setrole", description="Configure a role used by the bot")
     @app_commands.describe(
-        name="Which role to configure (admin/mod/sheher/hehim/channel_lock)",
+        name="Which role to configure (admin/mod/sheher/hehim/channel_lock/prisoner)",
         role="The role to use",
     )
     @app_commands.checks.has_permissions(manage_guild=True)
     async def setrole(interaction: discord.Interaction, name: str, role: discord.Role):
         key = name.lower()
-        valid = {"admin", "mod", "sheher", "hehim", "channel_lock"}
+        valid = {"admin", "mod", "sheher", "hehim", "channel_lock", "prisoner"}
         if key not in valid:
             await interaction.response.send_message(
                 "\u274c Invalid role name.", ephemeral=True
@@ -845,7 +845,7 @@ def setup(bot: commands.Bot):
     @app_commands.checks.has_permissions(manage_guild=True)
     async def removerole(interaction: discord.Interaction, name: str):
         key = name.lower()
-        valid = {"admin", "mod", "sheher", "hehim", "channel_lock"}
+        valid = {"admin", "mod", "sheher", "hehim", "channel_lock", "prisoner"}
         if key not in valid:
             await interaction.response.send_message(
                 "\u274c Invalid role name.", ephemeral=True
