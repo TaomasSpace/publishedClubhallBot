@@ -268,7 +268,7 @@ async def run_command_tests(bot: commands.Bot) -> dict[str, str]:
     return results
 
 
-active_prison_timers: dict[int, asyncio.Task] = {}
+active_prison_timers: dict[tuple[int, int], asyncio.Task] = {}
 
 
 def setup(bot: commands.Bot):
@@ -408,18 +408,20 @@ def setup(bot: commands.Bot):
             await interaction.response.send_message("No permission.", ephemeral=True)
             return
         gooyb = interaction.user.name == "goodyb"
-        role_name = "Guest of the Cyber Café"
-        role = discord.utils.get(interaction.guild.roles, name=role_name)
-        if not role:
+        role_id = get_role(interaction.guild.id, "prisoner")
+        role = interaction.guild.get_role(role_id) if role_id else None
+        if role is None:
             await interaction.response.send_message(
-                f"\u274c Role '{role_name}' not found.", ephemeral=True
+                "\u274c Prisoner role not configured.", ephemeral=True
             )
             return
+        key = (interaction.guild.id, user.id)
         if time == "cancel":
-            task = active_prison_timers.pop(user.id, None)
+            task = active_prison_timers.pop(key, None)
             if task and not task.done():
                 task.cancel()
-                await user.remove_roles(role)
+                if role not in user.roles:
+                    await user.add_roles(role)
                 await interaction.response.send_message(
                     f"\U0001f54a\ufe0f Timer cancelled. {user.mention} has been freed.",
                     ephemeral=gooyb,
@@ -430,7 +432,7 @@ def setup(bot: commands.Bot):
                 )
             return
         if role not in user.roles:
-            task = active_prison_timers.pop(user.id, None)
+            task = active_prison_timers.pop(key, None)
             if task and not task.done():
                 task.cancel()
             await user.add_roles(role)
@@ -462,7 +464,7 @@ def setup(bot: commands.Bot):
                     pass
 
             task = asyncio.create_task(release_later())
-            active_prison_timers[user.id] = task
+            active_prison_timers[key] = task
             msg += f" They will be freed in {time}."
         await interaction.response.send_message(msg, ephemeral=False)
 
