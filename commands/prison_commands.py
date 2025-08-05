@@ -171,7 +171,7 @@ class PrisonSetupView(discord.ui.View):
             [c.id for c in self.prison_exceptions],
         )
 
-        # Configure normal channels
+        # Configure normal channels: deny @everyone and allow only specified roles
         for ch in self.allowed_channels:
             try:
                 await ch.set_permissions(self.guild.default_role, send_messages=False)
@@ -182,21 +182,23 @@ class PrisonSetupView(discord.ui.View):
             except Exception:
                 pass
 
-        # Configure prison channel
+        # Configure prison channel so only prisoners can speak
         if self.prison_channel and self.prison_role:
             try:
                 await self.prison_channel.set_permissions(
-                    self.guild.default_role, send_messages=True
+                    self.guild.default_role, send_messages=False
                 )
                 await self.prison_channel.set_permissions(
-                    self.prison_role, send_messages=False
+                    self.prison_role, send_messages=True
                 )
             except Exception:
                 pass
 
+        # Allow prisoners to speak in the optional exception channels
         for ch in self.prison_exceptions:
             try:
-                await ch.set_permissions(self.guild.default_role, send_messages=True)
+                if self.prison_role:
+                    await ch.set_permissions(self.prison_role, send_messages=True)
             except Exception:
                 pass
 
