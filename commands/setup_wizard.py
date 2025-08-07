@@ -15,7 +15,6 @@ from db.DBHelper import (
     set_booster_message,
     set_log_channel,
     set_anti_nuke_log_channel,
-
     add_filtered_word,
     add_trigger_response,
     set_anti_nuke_setting,
@@ -29,6 +28,7 @@ from anti_nuke import CATEGORIES
 # ---------------------------------------------------------------------------
 # Helper utilities
 # ---------------------------------------------------------------------------
+
 
 def _parse_id(value: str) -> Optional[int]:
     match = re.search(r"\d+", value)
@@ -128,7 +128,9 @@ class BoosterModal(discord.ui.Modal, title="Booster system"):
             set_booster_channel(interaction.guild.id, channel.id)
         if self.message.value:
             set_booster_message(interaction.guild.id, self.message.value)
-        await interaction.response.send_message("Booster settings saved.", ephemeral=True)
+        await interaction.response.send_message(
+            "Booster settings saved.", ephemeral=True
+        )
         await self.wizard.advance(interaction)
 
 
@@ -203,12 +205,22 @@ class SafeRolesModal(discord.ui.Modal, title="Anti-nuke safe roles"):
         self.wizard = wizard
 
     async def on_submit(self, interaction: discord.Interaction):
-        guild = interaction.guild
-        for token in self.roles.value.split():
-            role = _parse_role(guild, token)
-            if role:
-                add_safe_role(guild.id, role.id)
-        await interaction.response.send_message("Safe roles updated.", ephemeral=True)
+        from events import trigger_responses
+
+        for line in self.mappings.value.splitlines():
+            if "|" not in line:
+                continue
+            trigger, response = line.split("|", 1)
+            if trigger and response:
+                trig = trigger.strip()
+                resp = response.strip()
+                add_trigger_response(trig, resp, interaction.guild.id)
+                trigger_responses.setdefault(interaction.guild.id, {})[
+                    trig.lower()
+                ] = resp
+        await interaction.response.send_message(
+            "Trigger responses saved.", ephemeral=True
+        )
         await self.wizard.advance(interaction)
 
 
@@ -233,18 +245,10 @@ class AntiNukeModal(discord.ui.Modal):
         self.category = category
 
     async def on_submit(self, interaction: discord.Interaction):
-        enabled = (
-            1
-            if self.enable.value.lower() in {"yes", "y", "true", "1"}
-            else 0
-        )
+        enabled = 1 if self.enable.value.lower() in {"yes", "y", "true", "1"} else 0
         threshold = int(self.threshold.value or 1)
         punishment = self.punishment.value.lower() or "kick"
-        dur = (
-            parse_duration(self.duration.value)
-            if self.duration.value
-            else None
-        )
+        dur = parse_duration(self.duration.value) if self.duration.value else None
         set_anti_nuke_setting(
             self.category,
             enabled,
@@ -257,7 +261,6 @@ class AntiNukeModal(discord.ui.Modal):
             f"Anti-nuke settings for {self.category} saved.", ephemeral=True
         )
         await self.wizard.advance(interaction)
-
 
 
 class FilterWordsModal(discord.ui.Modal, title="Filtered words"):
@@ -299,8 +302,12 @@ class TriggerResponsesModal(discord.ui.Modal, title="Trigger responses"):
                 continue
             trigger, response = line.split("|", 1)
             if trigger and response:
-                add_trigger_response(trigger.strip(), response.strip(), interaction.guild.id)
-        await interaction.response.send_message("Trigger responses saved.", ephemeral=True)
+                add_trigger_response(
+                    trigger.strip(), response.strip(), interaction.guild.id
+                )
+        await interaction.response.send_message(
+            "Trigger responses saved.", ephemeral=True
+        )
         await self.wizard.advance(interaction)
 
 
@@ -318,7 +325,6 @@ class WizardStep:
     instruction: Optional[str] = None
 
 
-
 class StepView(discord.ui.View):
     def __init__(self, wizard: "SetupWizard", step: WizardStep):
         super().__init__(timeout=None)
@@ -326,7 +332,9 @@ class StepView(discord.ui.View):
         self.step = step
 
     @discord.ui.button(label="Configure", style=discord.ButtonStyle.green)
-    async def configure(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def configure(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         if self.step.modal_factory:
             modal = self.step.modal_factory(self.wizard)
             await interaction.response.send_modal(modal)
@@ -335,7 +343,6 @@ class StepView(discord.ui.View):
                 self.step.instruction or "No action required.", ephemeral=True
             )
             await self.wizard.advance(interaction)
-
 
     @discord.ui.button(label="Skip", style=discord.ButtonStyle.gray)
     async def skip(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -414,7 +421,6 @@ class SetupWizard:
                         "Use `/setrole <name> <@role>` after the wizard to register"
                         " role shortcuts."
                     ),
-
                 ),
                 WizardStep(
                     "Command permissions",
@@ -424,7 +430,6 @@ class SetupWizard:
                         "Use `/setcommandrole <command> <@role>` after the wizard"
                         " to limit command usage."
                     ),
-
                 ),
                 WizardStep(
                     "Filtered words",
@@ -482,7 +487,8 @@ class SetupWizard:
 
 def setup(bot: commands.Bot):
     @bot.tree.command(
-        name="setup-wizard", description="Start an interactive setup wizard for this server"
+        name="setup-wizard",
+        description="Start an interactive setup wizard for this server",
     )
     @app_commands.checks.has_permissions(manage_guild=True)
     async def _setup_wizard(interaction: discord.Interaction):
