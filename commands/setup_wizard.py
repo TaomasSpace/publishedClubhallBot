@@ -205,22 +205,12 @@ class SafeRolesModal(discord.ui.Modal, title="Anti-nuke safe roles"):
         self.wizard = wizard
 
     async def on_submit(self, interaction: discord.Interaction):
-        from events import trigger_responses
-
-        for line in self.mappings.value.splitlines():
-            if "|" not in line:
-                continue
-            trigger, response = line.split("|", 1)
-            if trigger and response:
-                trig = trigger.strip()
-                resp = response.strip()
-                add_trigger_response(trig, resp, interaction.guild.id)
-                trigger_responses.setdefault(interaction.guild.id, {})[
-                    trig.lower()
-                ] = resp
-        await interaction.response.send_message(
-            "Trigger responses saved.", ephemeral=True
-        )
+        guild = interaction.guild
+        for token in self.roles.value.split():
+            role = _parse_role(guild, token)
+            if role:
+                add_safe_role(guild.id, role.id)
+        await interaction.response.send_message("Safe roles updated.", ephemeral=True)
         await self.wizard.advance(interaction)
 
 
@@ -297,14 +287,19 @@ class TriggerResponsesModal(discord.ui.Modal, title="Trigger responses"):
         self.wizard = wizard
 
     async def on_submit(self, interaction: discord.Interaction):
+        from events import trigger_responses
+
         for line in self.mappings.value.splitlines():
             if "|" not in line:
                 continue
             trigger, response = line.split("|", 1)
             if trigger and response:
-                add_trigger_response(
-                    trigger.strip(), response.strip(), interaction.guild.id
-                )
+                trig = trigger.strip()
+                resp = response.strip()
+                add_trigger_response(trig, resp, interaction.guild.id)
+                trigger_responses.setdefault(interaction.guild.id, {})[
+                    trig.lower()
+                ] = resp
         await interaction.response.send_message(
             "Trigger responses saved.", ephemeral=True
         )
