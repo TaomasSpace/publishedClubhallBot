@@ -840,6 +840,15 @@ def setup(bot: commands.Bot):
             f"\u2705 Set {key} role to {role.mention}.", ephemeral=True
         )
 
+    @bot.tree.command(
+        name="removetriggerresponse",
+        description="Remove a trigger response",
+    )
+    @app_commands.describe(trigger="Trigger word")
+    @app_commands.checks.has_permissions(manage_messages=True)
+    async def removetriggerresponse(interaction: discord.Interaction, trigger: str):
+        await removetrigger(interaction, trigger)
+
     @bot.tree.command(name="removerole", description="Remove a configured role")
     @app_commands.describe(name="Role name")
     @app_commands.checks.has_permissions(manage_guild=True)
