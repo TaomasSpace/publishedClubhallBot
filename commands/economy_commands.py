@@ -1056,6 +1056,23 @@ def setup(bot: commands.Bot):
         await interaction.response.send_message(view.render(), view=view)
         view.message = await interaction.original_response()
 
+    bot.tree.add_command(
+        money,
+        balance,
+        donate,
+        request,
+        topcoins,
+        weekly,
+        daily,
+        superpower,
+        animetitle,
+        gamble,
+        casino,
+        duel,
+        blackjack,
+        poker,
+    )
+
     return (
         money,
         balance,
