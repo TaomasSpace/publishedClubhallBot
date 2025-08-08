@@ -37,15 +37,26 @@ class MyBot(commands.Bot):
 
         await self.tree.sync()
 
+        n = 0
         for ac in self.tree.walk_commands():
-            if isinstance(ac, app_commands.Command) and hasattr(ac, "to_command"):
+            if hasattr(ac, "to_command"):
                 try:
-                    self.add_command(ac.to_command())
+                    cmd = ac.to_command()
+                    self.add_command(cmd)
+                    print("prefix:", cmd.qualified_name)
+                    n += 1
                 except commands.CommandRegistrationError:
                     pass
+        print("mirrored:", n)
 
 
 bot = MyBot(command_prefix="!", intents=intents)
+
+
+@bot.command()
+async def ping(ctx):
+    await ctx.send("pong")
+
 
 with open("code.txt", "r") as f:
     TOKEN = f.read().strip()
