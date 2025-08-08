@@ -161,6 +161,7 @@ async def on_message(
             avatar_url=message.author.display_avatar.url,
             allowed_mentions=discord.AllowedMentions.all(),
         )
+    await bot.process_commands(message)
     content = message.content.lower()
     from db.DBHelper import update_date, get_filtered_words
 
