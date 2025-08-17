@@ -93,16 +93,21 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
         )
 
     @bot.tree.command(name="buypoints", description="Buy stat‑points with coins")
-    async def buypoints(interaction: discord.Interaction, amount: int = 1):
-        if amount < 1:
+    async def buypoints(interaction: discord.Interaction, amount: str = "1"):
+        amountasInt = 1
+        price_per_point = int(STAT_PRICE)
+        if amount == "all":
+            amountasInt = get_money(interaction.user.id) / price_per_point
+        else:
+            amountasInt = int(amount)
+        if int(amountasInt) < 1:
             await interaction.response.send_message(
                 "Specify a positive amount.", ephemeral=True
             )
             return
         uid = str(interaction.user.id)
         register_user(uid, interaction.user.display_name)
-        price_per_point = int(STAT_PRICE)
-        cost = price_per_point * amount
+        cost = price_per_point * amountasInt
         balance = get_money(uid)
         if balance < cost:
             await interaction.response.send_message(
@@ -110,9 +115,9 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
             )
             return
         set_money(uid, balance - cost)
-        add_stat_points(uid, amount)
+        add_stat_points(uid, amountasInt)
         await interaction.response.send_message(
-            f"✅ Purchased {amount} point(s) for {cost} coins."
+            f"✅ Purchased {amountasInt} point(s) for {cost} coins."
         )
 
     @bot.tree.command(
@@ -122,14 +127,19 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
         stat="Which stat? (intelligence/strength/stealth)",
         points="How many points to allocate",
     )
-    async def allocate(interaction: discord.Interaction, stat: str, points: int):
+    async def allocate(interaction: discord.Interaction, stat: str, points: str):
         stat = stat.lower()
         if stat not in STAT_NAMES:
             await interaction.response.send_message(
                 "Invalid stat name.", ephemeral=True
             )
             return
-        if points < 1:
+        if points == "all":
+            user_stats = get_stats(str(interaction.user.id))
+            pointsAsInt = user_stats["stat_points"]
+        else:
+            pointsAsInt = int(points)
+        if pointsAsInt < 1:
             await interaction.response.send_message(
                 "Points must be > 0.", ephemeral=True
             )
@@ -137,15 +147,15 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
         uid = str(interaction.user.id)
         register_user(uid, interaction.user.display_name)
         user_stats = get_stats(uid)
-        if user_stats["stat_points"] < points:
+        if user_stats["stat_points"] < pointsAsInt:
             await interaction.response.send_message(
                 "Not enough unspent points.", ephemeral=True
             )
             return
-        increase_stat(uid, stat, points)
+        increase_stat(uid, stat, pointsAsInt)
         await sync_stat_roles(interaction.user)
         await interaction.response.send_message(
-            f"🔧 {stat.title()} increased by {points}."
+            f"🔧 {stat.title()} increased by {pointsAsInt}."
         )
 
     @bot.tree.command(name="fishing", description="Phish for stat-points")

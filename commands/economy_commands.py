@@ -740,19 +740,23 @@ def setup(bot: commands.Bot):
             f"{interaction.user.display_name} rolled **{power}**! ({rarity})"
         )
 
-    @bot.tree.command(
+       @bot.tree.command(
         name="gamble", description="Gamble your coins for a chance to win more!"
     )
-    async def gamble(interaction: discord.Interaction, amount: int):
+    async def gamble(interaction: discord.Interaction, amount: str):
         user_id = str(interaction.user.id)
         register_user(user_id, interaction.user.display_name)
-        if amount < 2:
+        if amount == "all":
+            amountasInt = get_money(user_id)
+        else:
+            amountasInt = int(amount)
+        if amountasInt < 2:
             await interaction.response.send_message(
                 "🎲 Minimum bet is 2 clubhall coins.", ephemeral=True
             )
             return
         balance = get_money(user_id)
-        if amount > balance:
+        if amountasInt > balance:
             await interaction.response.send_message(
                 "❌ You don't have enough clubhall coins!", ephemeral=True
             )
@@ -774,17 +778,17 @@ def setup(bot: commands.Bot):
         else:
             multiplier = 0
             message = "💀 You lost everything..."
-        new_amount = amount * multiplier
-        set_money(user_id, balance - amount + new_amount)
+        new_amount = amountasInt * multiplier
+        set_money(user_id, balance - amountasInt + new_amount)
         emoji_result = {3: "💎", 2: "🔥", 1: "😐", 0: "💀"}
         await interaction.edit_original_response(
             content=(
-                f"{emoji_result[multiplier]} **{interaction.user.display_name}**, you bet **{amount}** coins.\n"
+                f"{emoji_result[multiplier]} **{interaction.user.display_name}**, you bet **{amountasInt}** coins.\n"
                 f"{message}\n"
                 f"You now have **{get_money(user_id)}** clubhall coins."
             )
         )
-
+        
     @bot.tree.command(name="casino", description="pay to win")
     @app_commands.describe(bet="How much you want to bet")
     async def casino(inter: discord.Interaction, bet: int):
