@@ -740,7 +740,7 @@ def setup(bot: commands.Bot):
             f"{interaction.user.display_name} rolled **{power}**! ({rarity})"
         )
 
-       @bot.tree.command(
+    @bot.tree.command(
         name="gamble", description="Gamble your coins for a chance to win more!"
     )
     async def gamble(interaction: discord.Interaction, amount: str):
@@ -788,7 +788,7 @@ def setup(bot: commands.Bot):
                 f"You now have **{get_money(user_id)}** clubhall coins."
             )
         )
-        
+
     @bot.tree.command(name="casino", description="pay to win")
     @app_commands.describe(bet="How much you want to bet")
     async def casino(inter: discord.Interaction, bet: int):
