@@ -60,7 +60,7 @@ def setup(bot: commands.Bot):
         sender_id = interaction.user.id
         try:
             if user.id == sender_id:
-                if random() < 0.20:
+                if random() < 0.30:
                     embed = discord.Embed(
                         title=f"{interaction.user.display_name} tried to stab themselves... and succeeded?!",
                         color=discord.Color.red(),
@@ -72,7 +72,7 @@ def setup(bot: commands.Bot):
                         "You can't stab yourself... or can you?", ephemeral=True
                     )
                     return
-            if random() < 0.50:
+            if random() < 0.75:
                 embed = discord.Embed(
                     title=f"{interaction.user.display_name} stabs {user.display_name}!",
                     color=discord.Color.red(),
