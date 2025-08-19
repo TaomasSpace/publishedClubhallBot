@@ -49,12 +49,41 @@ def has_command_permission(
     if getattr(user.guild_permissions, required_permission, False):
         return True
     role_id = get_command_permission(user.guild.id, command)
-    if role_id is None:
+    if role_id is not None:
         print(
-            f"[PERM] No role or permission for command={command}, perm={required_permission}"
+            f"[PERM] Required role_id: {role_id}, user roles: {[r.id for r in user.roles]}"
+
+        )
+        return any(role.id == role_id for role in user.roles)
+    if getattr(user.guild_permissions, required_permission, False):
+        return True
+    print(
+        f"[PERM] No role or permission for command={command}, perm={required_permission}"
+    )
+    return False
+
+
+async def ensure_command_permission(
+    interaction: discord.Interaction, command: str, required_permission: str
+) -> bool:
+    """Check command permission and notify user if missing."""
+    user = interaction.user
+    guild = interaction.guild
+    if user.guild and user.id == guild.owner_id:
+        return True
+    role_id = get_command_permission(guild.id, command)
+    if role_id is not None:
+        if any(role.id == role_id for role in user.roles):
+            return True
+        role = guild.get_role(role_id)
+        role_name = role.name if role else f"role ID {role_id}"
+        await interaction.response.send_message(
+            f"Missing role: `{role_name}`.", ephemeral=True
         )
         return False
-    print(
-        f"[PERM] Required role_id: {role_id}, user roles: {[r.id for r in user.roles]}"
+    if getattr(user.guild_permissions, required_permission, False):
+        return True
+    await interaction.response.send_message(
+        f"Missing permission: `{required_permission}`.", ephemeral=True
     )
-    return any(role.id == role_id for role in user.roles)
+    return False
