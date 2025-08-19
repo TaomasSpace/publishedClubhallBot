@@ -510,12 +510,9 @@ def setup(bot: commands.Bot):
         if not has_command_permission(interaction.user, "lock", "admin"):
             await interaction.response.send_message("No permission.", ephemeral=True)
             return
-        lock_id = get_role(interaction.guild.id, "channel_lock")
-        role = interaction.guild.get_role(lock_id) if lock_id else None
-        if role is None:
-            await interaction.response.send_message("Role not found.", ephemeral=True)
-            return
-        await interaction.channel.set_permissions(role, send_messages=False)
+        await interaction.channel.set_permissions(
+            interaction.guild.default_role, send_messages=False
+        )
         await interaction.response.send_message(
             "\U0001f512 Channel locked.", ephemeral=True
         )
@@ -525,12 +522,9 @@ def setup(bot: commands.Bot):
         if not has_command_permission(interaction.user, "unlock", "admin"):
             await interaction.response.send_message("No permission.", ephemeral=True)
             return
-        lock_id = get_role(interaction.guild.id, "channel_lock")
-        role = interaction.guild.get_role(lock_id) if lock_id else None
-        if role is None:
-            await interaction.response.send_message("Role not found.", ephemeral=True)
-            return
-        await interaction.channel.set_permissions(role, send_messages=True)
+        await interaction.channel.set_permissions(
+            interaction.guild.default_role, send_messages=None
+        )
         await interaction.response.send_message(
             "\U0001f513 Channel unlocked.", ephemeral=True
         )
