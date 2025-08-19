@@ -136,7 +136,7 @@ from db.DBHelper import (
     get_anime_title,
     set_anime_title,
 )
-from utils import has_command_permission
+
 
 
 class RequestView(ui.View):
