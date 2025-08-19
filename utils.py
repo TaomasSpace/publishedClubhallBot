@@ -1,7 +1,7 @@
 import discord
 from discord import ui
 from typing import Optional
-from db.DBHelper import get_command_permission, get_role
+from db.DBHelper import get_command_permission
 
 webhook_cache: dict[int, discord.Webhook] = {}
 
@@ -41,17 +41,17 @@ def has_role(member: discord.Member, role: int | str) -> bool:
 
 
 def has_command_permission(
-    user: discord.Member, command: str, fallback_role_key: str
+    user: discord.Member, command: str, required_permission: str
 ) -> bool:
     if user.guild and user.id == user.guild.owner_id:
         # The server owner always has access to every command.
         return True
+    if getattr(user.guild_permissions, required_permission, False):
+        return True
     role_id = get_command_permission(user.guild.id, command)
     if role_id is None:
-        role_id = get_role(user.guild.id, fallback_role_key)
-    if role_id is None:
         print(
-            f"[PERM] No role found for command={command}, fallback={fallback_role_key}"
+            f"[PERM] No role or permission for command={command}, perm={required_permission}"
         )
         return False
     print(

@@ -287,7 +287,7 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
     async def addrod(
         interaction: discord.Interaction, level: int, price: int, multiplier: float
     ):
-        if not has_command_permission(interaction.user, "addrod", "admin"):
+        if not has_command_permission(interaction.user, "addrod", "manage_guild"):
             await interaction.response.send_message("No permission.", ephemeral=True)
             return
         rod_shop[level] = (price, multiplier)
