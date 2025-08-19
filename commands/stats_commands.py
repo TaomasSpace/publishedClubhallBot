@@ -290,6 +290,7 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
         if not await ensure_command_permission(
             interaction, "addrod", "manage_guild"
         ):
+
             return
         rod_shop[level] = (price, multiplier)
         add_rod_to_shop(level, price, multiplier)

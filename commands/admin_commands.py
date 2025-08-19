@@ -279,6 +279,7 @@ def setup(bot: commands.Bot):
     @bot.tree.command(name="test", description="Test all commands")
     async def test_commands(inter: discord.Interaction):
         if not await ensure_command_permission(inter, "test", "manage_guild"):
+
             return
         await inter.response.defer(thinking=True, ephemeral=True)
         results = await run_command_tests(bot)
@@ -326,6 +327,7 @@ def setup(bot: commands.Bot):
         if not await ensure_command_permission(
             inter, "addshoprole", "manage_roles"
         ):
+
             return
         try:
             colour_obj = discord.Colour(int(color.lstrip("#"), 16))
@@ -408,6 +410,7 @@ def setup(bot: commands.Bot):
     ):
         if not await ensure_command_permission(
             interaction, "addcolorreactionrole", "manage_roles"
+
         ):
             return
         channel = interaction.channel
@@ -437,6 +440,7 @@ def setup(bot: commands.Bot):
                 interaction, "imitate", "manage_messages"
             ):
                 return
+
         channel = interaction.channel
         webhook = await get_channel_webhook(channel)
         try:
@@ -466,6 +470,7 @@ def setup(bot: commands.Bot):
         if not await ensure_command_permission(
             interaction, "giveaway", "manage_guild"
         ):
+
             return
         if winners < 1:
             await interaction.response.send_message(
@@ -507,12 +512,13 @@ def setup(bot: commands.Bot):
         if not await ensure_command_permission(
             interaction, "lock", "manage_channels"
         ):
+
             return
         await interaction.channel.set_permissions(
             interaction.guild.default_role, send_messages=False
         )
         await interaction.response.send_message(
-            "\U0001f512 Channel locked.", ephemeral=True
+            "\U0001f512 Channel locked.", ephemeral=False
         )
 
     @bot.tree.command(name="unlock", description="Unlock this channel (Admin only)")
@@ -520,12 +526,13 @@ def setup(bot: commands.Bot):
         if not await ensure_command_permission(
             interaction, "unlock", "manage_channels"
         ):
+
             return
         await interaction.channel.set_permissions(
             interaction.guild.default_role, send_messages=None
         )
         await interaction.response.send_message(
-            "\U0001f513 Channel unlocked.", ephemeral=True
+            "\U0001f513 Channel unlocked.", ephemeral=False
         )
 
     @bot.tree.command(name="addfilterword", description="Add a word to the filter list")

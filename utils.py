@@ -46,10 +46,13 @@ def has_command_permission(
     if user.guild and user.id == user.guild.owner_id:
         # The server owner always has access to every command.
         return True
+    if getattr(user.guild_permissions, required_permission, False):
+        return True
     role_id = get_command_permission(user.guild.id, command)
     if role_id is not None:
         print(
             f"[PERM] Required role_id: {role_id}, user roles: {[r.id for r in user.roles]}"
+
         )
         return any(role.id == role_id for role in user.roles)
     if getattr(user.guild_permissions, required_permission, False):
