@@ -20,7 +20,7 @@ from db.DBHelper import (
     add_safe_user,
     add_safe_role,
 )
-from utils import parse_duration
+from utils import parse_duration, ensure_command_permission
 from anti_nuke import CATEGORIES
 
 
@@ -468,7 +468,10 @@ def setup(bot: commands.Bot):
         name="setup-wizard",
         description="Start an interactive setup wizard for this server",
     )
-    @app_commands.checks.has_permissions(manage_guild=True)
     async def _setup_wizard(interaction: discord.Interaction):
+        if not await ensure_command_permission(
+            interaction, "setup-wizard", "manage_guild"
+        ):
+            return
         wizard = SetupWizard(interaction)
         await wizard.start()
