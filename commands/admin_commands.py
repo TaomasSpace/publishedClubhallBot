@@ -798,12 +798,29 @@ def setup(bot: commands.Bot):
     )
     @app_commands.checks.has_permissions(manage_guild=True)
     async def setcommandrole(
-        interaction: discord.Interaction, command: str, role: discord.Role
+        interaction: discord.Interaction, command: str, role: discord.Role,
     ):
-        set_command_permission(interaction.guild.id, command, role.id)
+        cmd = bot.tree.get_command(command)
+        if cmd is None:
+            await interaction.response.send_message(
+                "Unknown command.", ephemeral=True
+            )
+            return
+        set_command_permission(interaction.guild.id, cmd.name, role.id)
         await interaction.response.send_message(
-            f"\u2705 Set {command} command role to {role.mention}.", ephemeral=True
+            f"\u2705 Set {cmd.name} command role to {role.mention}.",
+            ephemeral=True,
         )
+
+    @setcommandrole.autocomplete("command")
+    async def setcommandrole_autocomplete(
+        interaction: discord.Interaction, current: str
+    ) -> list[app_commands.Choice[str]]:
+        commands_list: list[app_commands.Choice[str]] = []
+        for c in bot.tree.get_commands():
+            if current.lower() in c.name.lower():
+                commands_list.append(app_commands.Choice(name=c.name, value=c.name))
+        return commands_list[:25]
 
     @bot.tree.command(
         name="removecommandrole", description="Remove required role for a command"
