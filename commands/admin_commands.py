@@ -514,7 +514,7 @@ def setup(bot: commands.Bot):
             interaction.guild.default_role, send_messages=False
         )
         await interaction.response.send_message(
-            "\U0001f512 Channel locked.", ephemeral=True
+            "\U0001f512 Channel locked.", ephemeral=False
         )
 
     @bot.tree.command(name="unlock", description="Unlock this channel (Admin only)")
@@ -526,7 +526,7 @@ def setup(bot: commands.Bot):
             interaction.guild.default_role, send_messages=None
         )
         await interaction.response.send_message(
-            "\U0001f513 Channel unlocked.", ephemeral=True
+            "\U0001f513 Channel unlocked.", ephemeral=False
         )
 
     @bot.tree.command(name="addfilterword", description="Add a word to the filter list")
