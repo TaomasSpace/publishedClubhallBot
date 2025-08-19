@@ -855,6 +855,7 @@ def setup(bot: commands.Bot):
             interaction, "setcommandrole", "manage_guild"
         ):
             return
+
         cmd = bot.tree.get_command(command)
         if cmd is None:
             await interaction.response.send_message(
