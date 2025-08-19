@@ -328,7 +328,7 @@ async def on_app_error(bot: commands.Bot, inter: discord.Interaction, error: Exc
         )
         return
     logging.exception(f"Slash-command error {error_id}", exc_info=error)
-    msg = f"Oops, something went wrong 😵 (Error ID: {error_id})"
+    msg = f"Error: {error} (Error ID: {error_id})"
     if inter.response.is_done():
         await inter.followup.send(msg, ephemeral=True)
     else:
@@ -367,7 +367,7 @@ async def on_command_error(
     if log_ch and log_ch != central_log:
         await log_ch.send(embed=embed)
     logging.exception(f"Prefix command error {error_id}", exc_info=error)
-    await ctx.send(f"Oops, something went wrong 😵 (Error ID: {error_id})")
+    await ctx.send(f"Error: {error} (Error ID: {error_id})")
 
 
 def format_options(data: dict, interaction: discord.Interaction) -> str:
