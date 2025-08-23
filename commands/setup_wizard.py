@@ -470,7 +470,7 @@ def setup(bot: commands.Bot):
     )
     async def _setup_wizard(interaction: discord.Interaction):
         if not await ensure_command_permission(
-            interaction, "setup-wizard", "manage_guild"
+            interaction, "manage_guild"
         ):
             return
         wizard = SetupWizard(interaction)

@@ -19,7 +19,7 @@ def setup(bot: commands.Bot):
     @app_commands.describe(member="Member to lock/unlock")
     async def forcelowercase(interaction: discord.Interaction, member: discord.Member):
         if not await ensure_command_permission(
-            interaction, "forcelowercase", "manage_messages"
+            interaction, "manage_messages"
         ):
             return
 
