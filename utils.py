@@ -68,6 +68,23 @@ async def ensure_command_permission(
     guild = interaction.guild
     if _is_guild_owner(user, guild):
         return True
+
+    if guild is None:
+        await interaction.response.send_message(
+            f"Missing permission: `{required_permission}`.", ephemeral=True
+        )
+        return False
+    role_id = get_command_permission(guild.id, command)
+    if role_id is not None:
+        if any(role.id == role_id for role in user.roles):
+            return True
+        role = guild.get_role(role_id)
+        role_name = role.name if role else f"role ID {role_id}"
+        await interaction.response.send_message(
+            f"Missing role: `{role_name}`.", ephemeral=True
+        )
+        return False
+
     if getattr(user.guild_permissions, required_permission, False):
         return True
     await interaction.response.send_message(
