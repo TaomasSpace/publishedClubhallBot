@@ -293,6 +293,8 @@ async def on_raw_reaction_remove(
 
 
 async def on_app_error(bot: commands.Bot, inter: discord.Interaction, error: Exception):
+    if isinstance(error, app_commands.CheckFailure):
+        return
     error_id = uuid.uuid4().hex[:8]
     cid = get_log_channel(inter.guild.id) if inter.guild else None
     log_ch = bot.get_channel(cid) if cid else None
