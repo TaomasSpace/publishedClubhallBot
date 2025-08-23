@@ -1,7 +1,6 @@
 import discord
-from discord import ui
-from typing import Optional
-from db.DBHelper import get_command_permission
+from discord import app_commands, ui
+from typing import Callable, Optional
 
 webhook_cache: dict[int, discord.Webhook] = {}
 
@@ -40,50 +39,49 @@ def has_role(member: discord.Member, role: int | str) -> bool:
     return any(r.name == role for r in member.roles)
 
 
-def has_command_permission(
-    user: discord.Member, command: str, required_permission: str
-) -> bool:
-    if user.guild and user.id == user.guild.owner_id:
-        # The server owner always has access to every command.
-        return True
-    if getattr(user.guild_permissions, required_permission, False):
-        return True
-    role_id = get_command_permission(user.guild.id, command)
-    if role_id is not None:
-        print(
-            f"[PERM] Required role_id: {role_id}, user roles: {[r.id for r in user.roles]}"
+def _is_guild_owner(user: discord.abc.User, guild: discord.Guild | None) -> bool:
+    """Return True if the user owns the given guild."""
+    if guild is None:
+        return False
+    owner_id = getattr(guild, "owner_id", None)
+    if owner_id is None:
+        owner = getattr(guild, "owner", None)
+        owner_id = getattr(owner, "id", None)
+    return owner_id is not None and user.id == owner_id
 
-        )
-        return any(role.id == role_id for role in user.roles)
-    if getattr(user.guild_permissions, required_permission, False):
+
+def has_command_permission(user: discord.Member, required_permission: str) -> bool:
+    """Return True if the user has the given permission or is the guild owner."""
+    guild = getattr(user, "guild", None)
+    if _is_guild_owner(user, guild):
         return True
-    print(
-        f"[PERM] No role or permission for command={command}, perm={required_permission}"
-    )
-    return False
+    permissions = getattr(getattr(user, "guild_permissions", None), required_permission, False)
+    return bool(permissions)
 
 
 async def ensure_command_permission(
-    interaction: discord.Interaction, command: str, required_permission: str
+    interaction: discord.Interaction, required_permission: str
 ) -> bool:
     """Check command permission and notify user if missing."""
     user = interaction.user
-    guild = interaction.guild
-    if user.guild and user.id == guild.owner_id:
+    guild = interaction.guild or getattr(user, "guild", None)
+    if _is_guild_owner(user, guild):
         return True
-    role_id = get_command_permission(guild.id, command)
-    if role_id is not None:
-        if any(role.id == role_id for role in user.roles):
-            return True
-        role = guild.get_role(role_id)
-        role_name = role.name if role else f"role ID {role_id}"
-        await interaction.response.send_message(
-            f"Missing role: `{role_name}`.", ephemeral=True
-        )
-        return False
-    if getattr(user.guild_permissions, required_permission, False):
+    permissions = getattr(getattr(user, "guild_permissions", None), required_permission, False)
+    if permissions:
         return True
     await interaction.response.send_message(
         f"Missing permission: `{required_permission}`.", ephemeral=True
     )
     return False
+
+
+def command_requires(required_permission: str, *, bypass: Callable[[discord.Interaction], bool] | None = None):
+    """Decorator enforcing Discord permissions on app commands."""
+
+    async def predicate(interaction: discord.Interaction) -> bool:
+        if bypass and bypass(interaction):
+            return True
+        return await ensure_command_permission(interaction, required_permission)
+
+    return app_commands.check(predicate)
