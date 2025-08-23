@@ -1,7 +1,6 @@
 import discord
 from discord import ui
 from typing import Optional
-from db.DBHelper import get_command_permission
 
 webhook_cache: dict[int, discord.Webhook] = {}
 
@@ -56,26 +55,9 @@ def has_command_permission(
 ) -> bool:
     guild = getattr(user, "guild", None)
     if _is_guild_owner(user, guild):
-
         # The server owner always has access to every command.
         return True
-    if getattr(user.guild_permissions, required_permission, False):
-        return True
-    if guild is None:
-        return False
-    role_id = get_command_permission(guild.id, command)
-    if role_id is not None:
-        print(
-            f"[PERM] Required role_id: {role_id}, user roles: {[r.id for r in user.roles]}"
-
-        )
-        return any(role.id == role_id for role in user.roles)
-    if getattr(user.guild_permissions, required_permission, False):
-        return True
-    print(
-        f"[PERM] No role or permission for command={command}, perm={required_permission}"
-    )
-    return False
+    return getattr(user.guild_permissions, required_permission, False)
 
 
 async def ensure_command_permission(
@@ -86,6 +68,7 @@ async def ensure_command_permission(
     guild = interaction.guild
     if _is_guild_owner(user, guild):
         return True
+
     if guild is None:
         await interaction.response.send_message(
             f"Missing permission: `{required_permission}`.", ephemeral=True
@@ -101,6 +84,7 @@ async def ensure_command_permission(
             f"Missing role: `{role_name}`.", ephemeral=True
         )
         return False
+
     if getattr(user.guild_permissions, required_permission, False):
         return True
     await interaction.response.send_message(
