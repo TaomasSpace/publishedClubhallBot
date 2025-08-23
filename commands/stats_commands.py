@@ -288,7 +288,7 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
         interaction: discord.Interaction, level: int, price: int, multiplier: float
     ):
         if not await ensure_command_permission(
-            interaction, "addrod", "manage_guild"
+            interaction, "manage_guild"
         ):
 
             return

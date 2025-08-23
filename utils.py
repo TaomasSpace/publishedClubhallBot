@@ -50,42 +50,27 @@ def _is_guild_owner(user: discord.abc.User, guild: discord.Guild | None) -> bool
     return owner_id is not None and user.id == owner_id
 
 
-def has_command_permission(
-    user: discord.Member, command: str, required_permission: str
-) -> bool:
+def has_command_permission(user: discord.Member, required_permission: str) -> bool:
+    """Return True if the user has the given permission or is the guild owner."""
     guild = getattr(user, "guild", None)
     if _is_guild_owner(user, guild):
-        # The server owner always has access to every command.
         return True
-    return getattr(user.guild_permissions, required_permission, False)
+    permissions = getattr(getattr(user, "guild_permissions", None), required_permission, False)
+    return bool(permissions)
+
 
 
 async def ensure_command_permission(
-    interaction: discord.Interaction, command: str, required_permission: str
+    interaction: discord.Interaction, required_permission: str
 ) -> bool:
     """Check command permission and notify user if missing."""
     user = interaction.user
-    guild = interaction.guild
+    guild = interaction.guild or getattr(user, "guild", None)
     if _is_guild_owner(user, guild):
         return True
+    permissions = getattr(getattr(user, "guild_permissions", None), required_permission, False)
+    if permissions:
 
-    if guild is None:
-        await interaction.response.send_message(
-            f"Missing permission: `{required_permission}`.", ephemeral=True
-        )
-        return False
-    role_id = get_command_permission(guild.id, command)
-    if role_id is not None:
-        if any(role.id == role_id for role in user.roles):
-            return True
-        role = guild.get_role(role_id)
-        role_name = role.name if role else f"role ID {role_id}"
-        await interaction.response.send_message(
-            f"Missing role: `{role_name}`.", ephemeral=True
-        )
-        return False
-
-    if getattr(user.guild_permissions, required_permission, False):
         return True
     await interaction.response.send_message(
         f"Missing permission: `{required_permission}`.", ephemeral=True
