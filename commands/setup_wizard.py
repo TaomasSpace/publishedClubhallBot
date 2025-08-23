@@ -470,5 +470,6 @@ def setup(bot: commands.Bot):
     )
     @command_requires("manage_guild")
     async def _setup_wizard(interaction: discord.Interaction):
+
         wizard = SetupWizard(interaction)
         await wizard.start()

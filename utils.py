@@ -2,6 +2,7 @@ import discord
 from discord import app_commands, ui
 from typing import Callable, Optional
 
+
 webhook_cache: dict[int, discord.Webhook] = {}
 
 
@@ -59,6 +60,7 @@ def has_command_permission(user: discord.Member, required_permission: str) -> bo
     return bool(permissions)
 
 
+
 async def ensure_command_permission(
     interaction: discord.Interaction, required_permission: str
 ) -> bool:
@@ -69,6 +71,7 @@ async def ensure_command_permission(
         return True
     permissions = getattr(getattr(user, "guild_permissions", None), required_permission, False)
     if permissions:
+
         return True
     await interaction.response.send_message(
         f"Missing permission: `{required_permission}`.", ephemeral=True

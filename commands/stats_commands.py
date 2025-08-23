@@ -288,6 +288,7 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
     async def addrod(
         interaction: discord.Interaction, level: int, price: int, multiplier: float
     ):
+
         rod_shop[level] = (price, multiplier)
         add_rod_to_shop(level, price, multiplier)
         await interaction.response.send_message(
