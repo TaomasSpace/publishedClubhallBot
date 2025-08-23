@@ -40,15 +40,29 @@ def has_role(member: discord.Member, role: int | str) -> bool:
     return any(r.name == role for r in member.roles)
 
 
+def _is_guild_owner(user: discord.abc.User, guild: discord.Guild | None) -> bool:
+    """Return True if the user owns the given guild."""
+    if guild is None:
+        return False
+    owner_id = getattr(guild, "owner_id", None)
+    if owner_id is None:
+        owner = getattr(guild, "owner", None)
+        owner_id = getattr(owner, "id", None)
+    return owner_id is not None and user.id == owner_id
+
+
 def has_command_permission(
     user: discord.Member, command: str, required_permission: str
 ) -> bool:
-    if user.guild and user.id == user.guild.owner_id:
+    guild = getattr(user, "guild", None)
+    if _is_guild_owner(user, guild):
         # The server owner always has access to every command.
         return True
     if getattr(user.guild_permissions, required_permission, False):
         return True
-    role_id = get_command_permission(user.guild.id, command)
+    if guild is None:
+        return False
+    role_id = get_command_permission(guild.id, command)
     if role_id is not None:
         print(
             f"[PERM] Required role_id: {role_id}, user roles: {[r.id for r in user.roles]}"
@@ -69,8 +83,13 @@ async def ensure_command_permission(
     """Check command permission and notify user if missing."""
     user = interaction.user
     guild = interaction.guild
-    if user.guild and user.id == guild.owner_id:
+    if _is_guild_owner(user, guild):
         return True
+    if guild is None:
+        await interaction.response.send_message(
+            f"Missing permission: `{required_permission}`.", ephemeral=True
+        )
+        return False
     role_id = get_command_permission(guild.id, command)
     if role_id is not None:
         if any(role.id == role_id for role in user.roles):
