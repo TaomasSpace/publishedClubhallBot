@@ -2,7 +2,6 @@ import discord
 from discord import app_commands, ui
 from typing import Callable, Optional
 
-
 webhook_cache: dict[int, discord.Webhook] = {}
 
 
@@ -56,8 +55,10 @@ def has_command_permission(user: discord.Member, required_permission: str) -> bo
     guild = getattr(user, "guild", None)
     if _is_guild_owner(user, guild):
         return True
-    permissions = getattr(getattr(user, "guild_permissions", None), required_permission, False)
-    return bool(permissions)
+    permissions = getattr(user, "guild_permissions", None)
+    if getattr(permissions, "administrator", False):
+        return True
+    return bool(getattr(permissions, required_permission, False))
 
 
 
@@ -67,10 +68,17 @@ async def ensure_command_permission(
     """Check command permission and notify user if missing."""
     user = interaction.user
     guild = interaction.guild or getattr(user, "guild", None)
+    if guild is None and interaction.guild_id:
+        try:
+            guild = interaction.client.get_guild(interaction.guild_id) or await interaction.client.fetch_guild(interaction.guild_id)
+        except Exception:
+            guild = None
     if _is_guild_owner(user, guild):
         return True
-    permissions = getattr(getattr(user, "guild_permissions", None), required_permission, False)
-    if permissions:
+    permissions = getattr(user, "guild_permissions", None)
+    if getattr(permissions, "administrator", False):
+        return True
+    if getattr(permissions, required_permission, False):
 
         return True
     await interaction.response.send_message(
