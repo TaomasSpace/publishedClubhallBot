@@ -279,6 +279,7 @@ def setup(bot: commands.Bot):
     @bot.tree.command(name="test", description="Test all commands")
     @command_requires("manage_guild")
     async def test_commands(inter: discord.Interaction):
+
         await inter.response.defer(thinking=True, ephemeral=True)
         results = await run_command_tests(bot)
         report_lines = [f"{name}: {status}" for name, status in results.items()]
@@ -297,6 +298,7 @@ def setup(bot: commands.Bot):
         "manage_guild", bypass=lambda i: i.user.premium_since is not None
     )
     async def lastdate(interaction: discord.Interaction, user: discord.Member):
+
         from db.DBHelper import get_lastdate
 
         await interaction.response.send_message(get_lastdate(user.id), ephemeral=True)
@@ -321,6 +323,7 @@ def setup(bot: commands.Bot):
         reference: discord.Role | None = None,
         above: bool = True,
     ):
+
         try:
             colour_obj = discord.Colour(int(color.lstrip("#"), 16))
         except ValueError:
@@ -401,6 +404,7 @@ def setup(bot: commands.Bot):
         emoji: str,
         role: discord.Role,
     ):
+
         channel = interaction.channel
         try:
             message = await channel.fetch_message(target_message_id)
@@ -426,6 +430,7 @@ def setup(bot: commands.Bot):
         "manage_messages", bypass=lambda i: i.user.premium_since is not None
     )
     async def imitate(interaction: discord.Interaction, user: discord.Member, msg: str):
+
 
         channel = interaction.channel
         webhook = await get_channel_webhook(channel)
@@ -454,6 +459,7 @@ def setup(bot: commands.Bot):
     async def giveaway(
         interaction: discord.Interaction, duration: int, prize: str, winners: int
     ):
+
         if winners < 1:
             await interaction.response.send_message(
                 "You need at least 1 winner.", ephemeral=True
@@ -492,6 +498,7 @@ def setup(bot: commands.Bot):
     @bot.tree.command(name="lock", description="Lock this channel (Admin only)")
     @command_requires("manage_channels")
     async def lock_channel(interaction: discord.Interaction):
+
         await interaction.channel.set_permissions(
             interaction.guild.default_role, send_messages=False
         )
@@ -502,6 +509,7 @@ def setup(bot: commands.Bot):
     @bot.tree.command(name="unlock", description="Unlock this channel (Admin only)")
     @command_requires("manage_channels")
     async def unlock_channel(interaction: discord.Interaction):
+
         await interaction.channel.set_permissions(
             interaction.guild.default_role, send_messages=None
         )
@@ -513,6 +521,7 @@ def setup(bot: commands.Bot):
     @app_commands.describe(word="Word to filter")
     @command_requires("manage_messages")
     async def addfilterword(interaction: discord.Interaction, word: str):
+
         from db.DBHelper import add_filtered_word
 
         add_filtered_word(interaction.guild.id, word)
@@ -526,6 +535,7 @@ def setup(bot: commands.Bot):
     @app_commands.describe(word="Word to remove")
     @command_requires("manage_messages")
     async def removefilterword(interaction: discord.Interaction, word: str):
+
         from db.DBHelper import remove_filtered_word
 
         remove_filtered_word(interaction.guild.id, word)
@@ -547,6 +557,7 @@ def setup(bot: commands.Bot):
     @app_commands.describe(trigger="Trigger word", response="Response message")
     @command_requires("manage_messages")
     async def addtrigger(interaction: discord.Interaction, trigger: str, response: str):
+
         from db.DBHelper import add_trigger_response
         from events import trigger_responses
 
@@ -562,6 +573,7 @@ def setup(bot: commands.Bot):
     @app_commands.describe(trigger="Trigger word")
     @command_requires("manage_messages")
     async def removetrigger(interaction: discord.Interaction, trigger: str):
+
         from db.DBHelper import remove_trigger_response
         from events import trigger_responses
 
@@ -587,6 +599,7 @@ def setup(bot: commands.Bot):
     async def setwelcomechannel(
         interaction: discord.Interaction, channel: discord.TextChannel
     ):
+
         set_welcome_channel(interaction.guild.id, channel.id)
         await interaction.response.send_message(
             f"\u2705 Welcome channel set to {channel.mention}.", ephemeral=True
@@ -598,6 +611,7 @@ def setup(bot: commands.Bot):
     async def setleavechannel(
         interaction: discord.Interaction, channel: discord.TextChannel
     ):
+
         set_leave_channel(interaction.guild.id, channel.id)
         await interaction.response.send_message(
             f"\u2705 Leave channel set to {channel.mention}.", ephemeral=True
@@ -609,6 +623,7 @@ def setup(bot: commands.Bot):
     )
     @command_requires("manage_guild")
     async def setwelcomemsg(interaction: discord.Interaction, message: str):
+
         set_welcome_message(interaction.guild.id, message)
         await interaction.response.send_message(
             "\u2705 Welcome message updated.", ephemeral=True
@@ -620,6 +635,7 @@ def setup(bot: commands.Bot):
     )
     @command_requires("manage_guild")
     async def setleavemsg(interaction: discord.Interaction, message: str):
+
         set_leave_message(interaction.guild.id, message)
         await interaction.response.send_message(
             "\u2705 Leave message updated.", ephemeral=True
@@ -631,6 +647,7 @@ def setup(bot: commands.Bot):
     async def setboostchannel(
         interaction: discord.Interaction, channel: discord.TextChannel
     ):
+
         set_booster_channel(interaction.guild.id, channel.id)
         await interaction.response.send_message(
             f"\u2705 Booster channel set to {channel.mention}.", ephemeral=True
@@ -642,6 +659,7 @@ def setup(bot: commands.Bot):
     )
     @command_requires("manage_guild")
     async def setboostmsg(interaction: discord.Interaction, message: str):
+
         set_booster_message(interaction.guild.id, message)
         await interaction.response.send_message(
             "\u2705 Booster message updated.", ephemeral=True
@@ -653,6 +671,7 @@ def setup(bot: commands.Bot):
     async def setlogchannel(
         interaction: discord.Interaction, channel: discord.TextChannel
     ):
+
         set_log_channel(interaction.guild.id, channel.id)
         await interaction.response.send_message(
             f"\u2705 Log channel set to {channel.mention}.", ephemeral=True
@@ -661,6 +680,7 @@ def setup(bot: commands.Bot):
     @bot.tree.command(name="serversettings", description="Show server configuration")
     @command_requires("manage_guild")
     async def serversettings(interaction: discord.Interaction):
+
         gid = interaction.guild.id
         lines = []
 
@@ -727,6 +747,7 @@ def setup(bot: commands.Bot):
     )
     @command_requires("manage_guild")
     async def setrole(interaction: discord.Interaction, name: str, role: discord.Role):
+
         key = name.lower()
         valid = {"sheher", "hehim"}
         if key not in valid:
@@ -746,6 +767,7 @@ def setup(bot: commands.Bot):
     @app_commands.describe(trigger="Trigger word")
     @command_requires("manage_messages")
     async def removetriggerresponse(interaction: discord.Interaction, trigger: str):
+
         from db.DBHelper import remove_trigger_response
         from events import trigger_responses
 
@@ -759,6 +781,7 @@ def setup(bot: commands.Bot):
     @app_commands.describe(name="Role name")
     @command_requires("manage_guild")
     async def removerole(interaction: discord.Interaction, name: str):
+
         key = name.lower()
         valid = {"sheher", "hehim"}
         if key not in valid:

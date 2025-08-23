@@ -20,6 +20,7 @@ def setup(bot: commands.Bot):
     @command_requires("manage_messages")
     async def forcelowercase(interaction: discord.Interaction, member: discord.Member):
 
+
         locked = lowercase_locked[interaction.guild.id]
         if member.id in locked:
             locked.remove(member.id)
