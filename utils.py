@@ -56,6 +56,7 @@ def has_command_permission(
 ) -> bool:
     guild = getattr(user, "guild", None)
     if _is_guild_owner(user, guild):
+
         # The server owner always has access to every command.
         return True
     if getattr(user.guild_permissions, required_permission, False):
