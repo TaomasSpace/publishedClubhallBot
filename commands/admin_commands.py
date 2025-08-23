@@ -60,7 +60,7 @@ from utils import (
     has_role,
     get_channel_webhook,
     parse_duration,
-    ensure_command_permission,
+    command_requires,
 )
 
 
@@ -277,10 +277,9 @@ async def run_command_tests(bot: commands.Bot) -> dict[str, str]:
 
 def setup(bot: commands.Bot):
     @bot.tree.command(name="test", description="Test all commands")
+    @command_requires("manage_guild")
     async def test_commands(inter: discord.Interaction):
-        if not await ensure_command_permission(inter, "manage_guild"):
 
-            return
         await inter.response.defer(thinking=True, ephemeral=True)
         results = await run_command_tests(bot)
         report_lines = [f"{name}: {status}" for name, status in results.items()]
@@ -295,12 +294,11 @@ def setup(bot: commands.Bot):
         name="lastdate", description="Get a last date of user (Admin/Owner only)"
     )
     @app_commands.describe(user="User")
+    @command_requires(
+        "manage_guild", bypass=lambda i: i.user.premium_since is not None
+    )
     async def lastdate(interaction: discord.Interaction, user: discord.Member):
-        if not interaction.user.premium_since:
-            if not await ensure_command_permission(
-                interaction, "manage_guild"
-            ):
-                return
+
         from db.DBHelper import get_lastdate
 
         await interaction.response.send_message(get_lastdate(user.id), ephemeral=True)
@@ -316,6 +314,7 @@ def setup(bot: commands.Bot):
         reference="Put the new role relative to this role (optional)",
         above="If True, place *above* the reference; else below",
     )
+    @command_requires("manage_roles")
     async def addshoprole(
         inter: discord.Interaction,
         name: str,
@@ -324,11 +323,7 @@ def setup(bot: commands.Bot):
         reference: discord.Role | None = None,
         above: bool = True,
     ):
-        if not await ensure_command_permission(
-            inter, "manage_roles"
-        ):
 
-            return
         try:
             colour_obj = discord.Colour(int(color.lstrip("#"), 16))
         except ValueError:
@@ -402,17 +397,14 @@ def setup(bot: commands.Bot):
         description="Add emoji-role to color reaction message",
     )
     @app_commands.describe(emoji="Emoji to react with", role="Role to assign")
+    @command_requires("manage_roles")
     async def addcolorreactionrole(
         interaction: discord.Interaction,
         target_message_id: str,
         emoji: str,
         role: discord.Role,
     ):
-        if not await ensure_command_permission(
-            interaction, "manage_roles"
 
-        ):
-            return
         channel = interaction.channel
         try:
             message = await channel.fetch_message(target_message_id)
@@ -434,12 +426,11 @@ def setup(bot: commands.Bot):
         name="imitate", description="Imitate a user's message (Admin/Owner only)"
     )
     @app_commands.describe(user="User to imitate", msg="The message to send")
+    @command_requires(
+        "manage_messages", bypass=lambda i: i.user.premium_since is not None
+    )
     async def imitate(interaction: discord.Interaction, user: discord.Member, msg: str):
-        if not interaction.user.premium_since:
-            if not await ensure_command_permission(
-                interaction, "manage_messages"
-            ):
-                return
+
 
         channel = interaction.channel
         webhook = await get_channel_webhook(channel)
@@ -464,14 +455,11 @@ def setup(bot: commands.Bot):
     @app_commands.describe(
         duration="Duration in minutes", prize="Prize", winners="Number of winners"
     )
+    @command_requires("manage_guild")
     async def giveaway(
         interaction: discord.Interaction, duration: int, prize: str, winners: int
     ):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
 
-            return
         if winners < 1:
             await interaction.response.send_message(
                 "You need at least 1 winner.", ephemeral=True
@@ -508,12 +496,9 @@ def setup(bot: commands.Bot):
         active_giveaway_tasks[giveaway_msg.id] = task
 
     @bot.tree.command(name="lock", description="Lock this channel (Admin only)")
+    @command_requires("manage_channels")
     async def lock_channel(interaction: discord.Interaction):
-        if not await ensure_command_permission(
-            interaction, "manage_channels"
-        ):
 
-            return
         await interaction.channel.set_permissions(
             interaction.guild.default_role, send_messages=False
         )
@@ -522,12 +507,9 @@ def setup(bot: commands.Bot):
         )
 
     @bot.tree.command(name="unlock", description="Unlock this channel (Admin only)")
+    @command_requires("manage_channels")
     async def unlock_channel(interaction: discord.Interaction):
-        if not await ensure_command_permission(
-            interaction, "manage_channels"
-        ):
 
-            return
         await interaction.channel.set_permissions(
             interaction.guild.default_role, send_messages=None
         )
@@ -537,11 +519,9 @@ def setup(bot: commands.Bot):
 
     @bot.tree.command(name="addfilterword", description="Add a word to the filter list")
     @app_commands.describe(word="Word to filter")
+    @command_requires("manage_messages")
     async def addfilterword(interaction: discord.Interaction, word: str):
-        if not await ensure_command_permission(
-            interaction, "manage_messages"
-        ):
-            return
+
         from db.DBHelper import add_filtered_word
 
         add_filtered_word(interaction.guild.id, word)
@@ -553,11 +533,9 @@ def setup(bot: commands.Bot):
         name="removefilterword", description="Remove a word from the filter list"
     )
     @app_commands.describe(word="Word to remove")
+    @command_requires("manage_messages")
     async def removefilterword(interaction: discord.Interaction, word: str):
-        if not await ensure_command_permission(
-            interaction, "manage_messages"
-        ):
-            return
+
         from db.DBHelper import remove_filtered_word
 
         remove_filtered_word(interaction.guild.id, word)
@@ -577,11 +555,9 @@ def setup(bot: commands.Bot):
 
     @bot.tree.command(name="addtrigger", description="Add a trigger response")
     @app_commands.describe(trigger="Trigger word", response="Response message")
+    @command_requires("manage_messages")
     async def addtrigger(interaction: discord.Interaction, trigger: str, response: str):
-        if not await ensure_command_permission(
-            interaction, "manage_messages"
-        ):
-            return
+
         from db.DBHelper import add_trigger_response
         from events import trigger_responses
 
@@ -595,11 +571,9 @@ def setup(bot: commands.Bot):
 
     @bot.tree.command(name="removetrigger", description="Remove a trigger response")
     @app_commands.describe(trigger="Trigger word")
+    @command_requires("manage_messages")
     async def removetrigger(interaction: discord.Interaction, trigger: str):
-        if not await ensure_command_permission(
-            interaction, "manage_messages"
-        ):
-            return
+
         from db.DBHelper import remove_trigger_response
         from events import trigger_responses
 
@@ -621,13 +595,11 @@ def setup(bot: commands.Bot):
 
     @bot.tree.command(name="setwelcomechannel", description="Set the welcome channel")
     @app_commands.describe(channel="Channel for welcome messages")
+    @command_requires("manage_guild")
     async def setwelcomechannel(
         interaction: discord.Interaction, channel: discord.TextChannel
     ):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
-            return
+
         set_welcome_channel(interaction.guild.id, channel.id)
         await interaction.response.send_message(
             f"\u2705 Welcome channel set to {channel.mention}.", ephemeral=True
@@ -635,13 +607,11 @@ def setup(bot: commands.Bot):
 
     @bot.tree.command(name="setleavechannel", description="Set the leave channel")
     @app_commands.describe(channel="Channel for leave messages")
+    @command_requires("manage_guild")
     async def setleavechannel(
         interaction: discord.Interaction, channel: discord.TextChannel
     ):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
-            return
+
         set_leave_channel(interaction.guild.id, channel.id)
         await interaction.response.send_message(
             f"\u2705 Leave channel set to {channel.mention}.", ephemeral=True
@@ -651,11 +621,9 @@ def setup(bot: commands.Bot):
     @app_commands.describe(
         message="Message; placeholders: {member}, {member_mention}, {server}, {member_count}"
     )
+    @command_requires("manage_guild")
     async def setwelcomemsg(interaction: discord.Interaction, message: str):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
-            return
+
         set_welcome_message(interaction.guild.id, message)
         await interaction.response.send_message(
             "\u2705 Welcome message updated.", ephemeral=True
@@ -665,11 +633,9 @@ def setup(bot: commands.Bot):
     @app_commands.describe(
         message="Message; placeholders: {member}, {member_mention}, {server}, {member_count}"
     )
+    @command_requires("manage_guild")
     async def setleavemsg(interaction: discord.Interaction, message: str):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
-            return
+
         set_leave_message(interaction.guild.id, message)
         await interaction.response.send_message(
             "\u2705 Leave message updated.", ephemeral=True
@@ -677,13 +643,11 @@ def setup(bot: commands.Bot):
 
     @bot.tree.command(name="setboostchannel", description="Set the booster channel")
     @app_commands.describe(channel="Channel for booster messages")
+    @command_requires("manage_guild")
     async def setboostchannel(
         interaction: discord.Interaction, channel: discord.TextChannel
     ):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
-            return
+
         set_booster_channel(interaction.guild.id, channel.id)
         await interaction.response.send_message(
             f"\u2705 Booster channel set to {channel.mention}.", ephemeral=True
@@ -693,11 +657,9 @@ def setup(bot: commands.Bot):
     @app_commands.describe(
         message="Message; placeholders: {member}, {member_mention}, {server}"
     )
+    @command_requires("manage_guild")
     async def setboostmsg(interaction: discord.Interaction, message: str):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
-            return
+
         set_booster_message(interaction.guild.id, message)
         await interaction.response.send_message(
             "\u2705 Booster message updated.", ephemeral=True
@@ -705,24 +667,20 @@ def setup(bot: commands.Bot):
 
     @bot.tree.command(name="setlogchannel", description="Set the log channel")
     @app_commands.describe(channel="Channel for bot logs")
+    @command_requires("manage_guild")
     async def setlogchannel(
         interaction: discord.Interaction, channel: discord.TextChannel
     ):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
-            return
+
         set_log_channel(interaction.guild.id, channel.id)
         await interaction.response.send_message(
             f"\u2705 Log channel set to {channel.mention}.", ephemeral=True
         )
 
     @bot.tree.command(name="serversettings", description="Show server configuration")
+    @command_requires("manage_guild")
     async def serversettings(interaction: discord.Interaction):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
-            return
+
         gid = interaction.guild.id
         lines = []
 
@@ -787,11 +745,9 @@ def setup(bot: commands.Bot):
         name="Which role to configure (sheher/hehim)",
         role="The role to use",
     )
+    @command_requires("manage_guild")
     async def setrole(interaction: discord.Interaction, name: str, role: discord.Role):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
-            return
+
         key = name.lower()
         valid = {"sheher", "hehim"}
         if key not in valid:
@@ -809,11 +765,9 @@ def setup(bot: commands.Bot):
         description="Remove a trigger response",
     )
     @app_commands.describe(trigger="Trigger word")
+    @command_requires("manage_messages")
     async def removetriggerresponse(interaction: discord.Interaction, trigger: str):
-        if not await ensure_command_permission(
-            interaction, "manage_messages"
-        ):
-            return
+
         from db.DBHelper import remove_trigger_response
         from events import trigger_responses
 
@@ -825,11 +779,9 @@ def setup(bot: commands.Bot):
 
     @bot.tree.command(name="removerole", description="Remove a configured role")
     @app_commands.describe(name="Role name")
+    @command_requires("manage_guild")
     async def removerole(interaction: discord.Interaction, name: str):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
-            return
+
         key = name.lower()
         valid = {"sheher", "hehim"}
         if key not in valid:
@@ -848,13 +800,10 @@ def setup(bot: commands.Bot):
     @app_commands.describe(
         command="Command name", role="Role allowed to use the command"
     )
+    @command_requires("manage_guild")
     async def setcommandrole(
         interaction: discord.Interaction, command: str, role: discord.Role,
     ):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
-            return
 
         cmd = bot.tree.get_command(command)
         if cmd is None:
@@ -882,11 +831,8 @@ def setup(bot: commands.Bot):
         name="removecommandrole", description="Remove required role for a command"
     )
     @app_commands.describe(command="Command name")
+    @command_requires("manage_guild")
     async def removecommandrole(interaction: discord.Interaction, command: str):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
-            return
         remove_command_permission(interaction.guild.id, command)
         await interaction.response.send_message(
             f"\u2705 Removed {command} command role.", ephemeral=True

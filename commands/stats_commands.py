@@ -25,7 +25,7 @@ from db.DBHelper import (
     get_money,
     set_money,
 )
-from utils import ensure_command_permission
+from utils import command_requires
 
 rod_shop: dict[int, tuple[int, float]] = {}
 
@@ -284,14 +284,11 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
         price="Price in coins",
         multiplier="Reward multiplier (e.g. 1.25)",
     )
+    @command_requires("manage_guild")
     async def addrod(
         interaction: discord.Interaction, level: int, price: int, multiplier: float
     ):
-        if not await ensure_command_permission(
-            interaction, "manage_guild"
-        ):
 
-            return
         rod_shop[level] = (price, multiplier)
         add_rod_to_shop(level, price, multiplier)
         await interaction.response.send_message(

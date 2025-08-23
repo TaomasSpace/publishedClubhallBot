@@ -1,6 +1,7 @@
 import discord
-from discord import ui
-from typing import Optional
+from discord import app_commands, ui
+from typing import Callable, Optional
+
 
 webhook_cache: dict[int, discord.Webhook] = {}
 
@@ -76,3 +77,14 @@ async def ensure_command_permission(
         f"Missing permission: `{required_permission}`.", ephemeral=True
     )
     return False
+
+
+def command_requires(required_permission: str, *, bypass: Callable[[discord.Interaction], bool] | None = None):
+    """Decorator enforcing Discord permissions on app commands."""
+
+    async def predicate(interaction: discord.Interaction) -> bool:
+        if bypass and bypass(interaction):
+            return True
+        return await ensure_command_permission(interaction, required_permission)
+
+    return app_commands.check(predicate)

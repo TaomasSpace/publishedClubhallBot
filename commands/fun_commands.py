@@ -5,7 +5,7 @@ from random import choice, random
 from typing import Optional
 from collections import defaultdict
 from db.DBHelper import get_role
-from utils import has_role, ensure_command_permission
+from utils import has_role, command_requires
 import requests
 
 lowercase_locked: dict[int, set[int]] = defaultdict(set)
@@ -17,11 +17,9 @@ def setup(bot: commands.Bot):
         description="Force a member's messages to lowercase (toggle)",
     )
     @app_commands.describe(member="Member to lock/unlock")
+    @command_requires("manage_messages")
     async def forcelowercase(interaction: discord.Interaction, member: discord.Member):
-        if not await ensure_command_permission(
-            interaction, "manage_messages"
-        ):
-            return
+
 
         locked = lowercase_locked[interaction.guild.id]
         if member.id in locked:
