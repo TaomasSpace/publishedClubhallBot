@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import subprocess
+
 import discord
 from discord.ext import commands
 
@@ -36,8 +39,16 @@ setup_explain(bot)
 events.setup(bot, lowercase_locked)
 anti_nuke.setup(bot)
 
+# Read the Discord token from an environment variable
+TOKEN = os.getenv("DISCORD_TOKEN")
+if not TOKEN:
+    raise RuntimeError("DISCORD_TOKEN environment variable not set")
 
-with open("code.txt", "r") as file:
-    TOKEN = file.read().strip()
+# Start the top.gg webhook server (Node.js) alongside the bot
+node_proc = subprocess.Popen(["node", "server.js"])
 
-bot.run(TOKEN)
+try:
+    bot.run(TOKEN)
+finally:
+    node_proc.terminate()
+    node_proc.wait()

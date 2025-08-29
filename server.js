@@ -1,11 +1,12 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const app = express();
-const PORT = 80;                 // oder 443 mit HTTPS
 
-const TOPGG_AUTH = "lS6lvCvcDdDKklWoUHLLjtz10g0eZCW8"; // exakt derselbe Token wie auf top.gg
+// Allow port/token to be configured through environment variables.
+const PORT = process.env.PORT || 80; // oder 443 mit HTTPS
+const TOPGG_AUTH = process.env.TOPGG_AUTH; // exakt derselbe Token wie auf top.gg
 
-app.use(bodyParser.json());
+// Express has built-in JSON body parsing.
+app.use(express.json());
 
 app.post("/vote", (req, res) => {
     const auth = req.header("Authorization");
