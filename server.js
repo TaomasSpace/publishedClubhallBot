@@ -18,16 +18,21 @@ app.post("/vote", (req, res) => {
     }
     const user = String(req.body.user);
     const script = path.join(__dirname, "scripts", "award_vote.py");
-    const child = spawn("python", [script, user]);
+    const child = spawn("python3", [script, user]);
+
     child.stdout.on("data", data => {
         const reward = data.toString().trim();
         console.log(`User ${user} voted and received ${reward} coins.`);
     });
-    child.on("error", err => {
+    child.once("error", err => {
         console.error(err);
-        res.status(500).send("Script error");
+        if (!res.headersSent) {
+            res.status(500).send("Script error");
+        }
     });
-    child.on("close", code => {
+    child.once("close", code => {
+        if (res.headersSent) return;
+
         if (code === 0) {
             res.sendStatus(200);
         } else {
