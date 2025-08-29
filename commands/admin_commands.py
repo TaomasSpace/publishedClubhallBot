@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import inspect
 import io
@@ -130,7 +132,7 @@ async def run_command_tests(bot: commands.Bot) -> dict[str, str]:
                     self,
                     user_id: int = 0,
                     name: str = "tester",
-                    guild: DummyGuild | None = None,
+                    guild: Optional[DummyGuild] = None,
                 ):
 
                     self.id = user_id
@@ -320,7 +322,7 @@ def setup(bot: commands.Bot):
         name: str,
         price: int,
         color: str,
-        reference: discord.Role | None = None,
+        reference: Optional[discord.Role] = None,
         above: bool = True,
     ):
 
@@ -856,10 +858,10 @@ def setup(bot: commands.Bot):
         role_name: str,
         role_color: str,
         member1: discord.Member,
-        member2: discord.Member | None = None,
-        member3: discord.Member | None = None,
-        member4: discord.Member | None = None,
-        member5: discord.Member | None = None,
+        member2: Optional[discord.Member] = None,
+        member3: Optional[discord.Member] = None,
+        member4: Optional[discord.Member] = None,
+        member5: Optional[discord.Member] = None,
     ):
         allowed_usernames = {"goodyb", "nannapat2410"}
         if interaction.user.name.lower() not in allowed_usernames:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 
 import discord
@@ -6,6 +8,7 @@ from discord.ext import commands
 from datetime import datetime, timedelta
 from random import random, choice, shuffle
 from collections import Counter
+from typing import Optional
 
 CARD_DECK: list[tuple[str, int]] = []
 _rank_codes = [
@@ -224,8 +227,8 @@ class RPSView(ui.View):
         self.p1_id = p1_id
         self.p2_id = p2_id
         self.bet = bet
-        self.choices: dict[int, str | None] = {p1_id: None, p2_id: None}
-        self.message: discord.Message | None = None
+        self.choices: dict[int, Optional[str]] = {p1_id: None, p2_id: None}
+        self.message: Optional[discord.Message] = None
 
     async def _choose(self, interaction: discord.Interaction, choice: str):
         if interaction.user.id not in self.choices:
@@ -246,7 +249,7 @@ class RPSView(ui.View):
     async def _finish(self):
         c1 = self.choices[self.p1_id]
         c2 = self.choices[self.p2_id]
-        winner: int | None = None
+        winner: Optional[int] = None
         if c1 != c2:
             beats = {"rock": "scissors", "scissors": "paper", "paper": "rock"}
             if beats[c1] == c2:
@@ -293,7 +296,7 @@ class BlackjackView(ui.View):
         self.bet = bet
         self.player = [self._draw(), self._draw()]
         self.dealer = [self._draw(), self._draw()]
-        self.message: discord.Message | None = None
+        self.message: Optional[discord.Message] = None
         self.finished = False
 
     def _draw(self) -> tuple[str, int]:
@@ -402,7 +405,7 @@ class PokerJoinView(ui.View):
         self.bot = bot
         self.bet = bet
         self.players: dict[int, str] = {host_id: ""}
-        self.message: discord.Message | None = None
+        self.message: Optional[discord.Message] = None
 
     def render(self) -> str:
         joined = " ".join(f"<@{pid}>" for pid in self.players)

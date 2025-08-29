@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 DB_PATH = "users.db"
 DAILY_REWARD = 20
 STAT_PRICE = 66

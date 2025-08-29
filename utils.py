@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import discord
 from discord import app_commands, ui
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 webhook_cache: dict[int, discord.Webhook] = {}
 
@@ -31,7 +33,7 @@ def parse_duration(duration: str) -> Optional[int]:
         return None
 
 
-def has_role(member: discord.Member, role: int | str) -> bool:
+def has_role(member: discord.Member, role: Union[int, str]) -> bool:
     if member.name == "goodyb":
         return True
     if isinstance(role, int):
@@ -39,7 +41,7 @@ def has_role(member: discord.Member, role: int | str) -> bool:
     return any(r.name == role for r in member.roles)
 
 
-def _is_guild_owner(user: discord.abc.User, guild: discord.Guild | None) -> bool:
+def _is_guild_owner(user: discord.abc.User, guild: Optional[discord.Guild]) -> bool:
     """Return True if the user owns the given guild."""
     if guild is None:
         return False
@@ -87,7 +89,11 @@ async def ensure_command_permission(
     return False
 
 
-def command_requires(required_permission: str, *, bypass: Callable[[discord.Interaction], bool] | None = None):
+def command_requires(
+    required_permission: str,
+    *,
+    bypass: Optional[Callable[[discord.Interaction], bool]] = None,
+):
     """Decorator enforcing Discord permissions on app commands."""
 
     async def predicate(interaction: discord.Interaction) -> bool:
