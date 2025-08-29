@@ -3,7 +3,6 @@ from discord import app_commands
 from discord.ext import commands
 from datetime import datetime, timedelta
 from random import choice, randint, random
-
 from config import (
     STAT_PRICE,
     STAT_NAMES,
@@ -21,11 +20,9 @@ from db.DBHelper import (
     get_rod_level,
     get_rod_multiplier,
     set_rod_level,
-    add_rod_to_shop,
     get_money,
     set_money,
 )
-from utils import command_requires
 
 rod_shop: dict[int, tuple[int, float]] = {}
 
@@ -41,7 +38,7 @@ async def sync_stat_roles(member: discord.Member):
         has_r = role in member.roles
         meets = stats[stat] >= threshold
         if meets and not has_r:
-            await member.add_roles(role, reason=f"{stat} {stats[stat]} ≥ {threshold}")
+            await member.add_roles(role, reason=f"{stat} {stats[stat]} = {threshold}")
         elif not meets and has_r:
             await member.remove_roles(
                 role, reason=f"{stat} {stats[stat]} < {threshold}"
@@ -69,7 +66,7 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
         await interaction.response.send_message(embed=embed, ephemeral=(user is None))
 
     @bot.tree.command(
-        name="quest", description="Complete a short quest to earn stat‑points (3 h CD)"
+        name="quest", description="Complete a short quest to earn stat-points (3?h CD)"
     )
     async def quest(interaction: discord.Interaction):
         uid = str(interaction.user.id)
@@ -81,18 +78,18 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
             hrs, sec = divmod(int(remain.total_seconds()), 3600)
             mins = sec // 60
             await interaction.response.send_message(
-                f"🕒 Next quest in {hrs} h {mins} min.", ephemeral=True
+                f"⏳ Next quest in {hrs}h {mins}min.", ephemeral=True
             )
             return
         earned = randint(1, 3)
         add_stat_points(uid, earned)
         set_timestamp(uid, "last_quest", now)
         await interaction.response.send_message(
-            f"🏅 You completed the quest and earned **{earned}** stat‑point(s)!",
+            f"✅ You completed the quest and earned **{earned}** stat-point(s)!",
             ephemeral=True,
         )
 
-    @bot.tree.command(name="buypoints", description="Buy stat‑points with coins")
+    @bot.tree.command(name="buypoints", description="Buy stat-points with coins")
     async def buypoints(interaction: discord.Interaction, amount: str = "1"):
         amountasInt = 1
         price_per_point = int(STAT_PRICE)
@@ -111,17 +108,17 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
         balance = get_money(uid)
         if balance < cost:
             await interaction.response.send_message(
-                f"❌ You need {cost} coins but only have {balance}.", ephemeral=True
+                f"💰 You need {cost} coins but only have {balance}.", ephemeral=True
             )
             return
         set_money(uid, balance - cost)
         add_stat_points(uid, amountasInt)
         await interaction.response.send_message(
-            f"✅ Purchased {amountasInt} point(s) for {cost} coins."
+            f"Purchased {amountasInt} point(s) for {cost} coins."
         )
 
     @bot.tree.command(
-        name="allocate", description="Spend stat‑points to increase a stat"
+        name="allocate", description="Spend stat-points to increase a stat"
     )
     @app_commands.describe(
         stat="Which stat? (intelligence/strength/stealth)",
@@ -141,7 +138,7 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
             pointsAsInt = int(points)
         if pointsAsInt < 1:
             await interaction.response.send_message(
-                "Points must be > 0.", ephemeral=True
+                "Points must be > 0.", ephemeral=True
             )
             return
         uid = str(interaction.user.id)
@@ -155,7 +152,7 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
         increase_stat(uid, stat, pointsAsInt)
         await sync_stat_roles(interaction.user)
         await interaction.response.send_message(
-            f"🔧 {stat.title()} increased by {pointsAsInt}."
+            f"{stat.title()} increased by {pointsAsInt}."
         )
 
     @bot.tree.command(name="fishing", description="Phish for stat-points")
@@ -276,26 +273,7 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
         set_rod_level(uid, level)
         await interaction.response.send_message(f"🎣 You bought Rod {level}!")
 
-    @bot.tree.command(
-        name="addrod", description="Add a fishing rod to the shop (Admin/Owner only)"
-    )
-    @app_commands.describe(
-        level="Rod identifier (must be a unique positive number)",
-        price="Price in coins",
-        multiplier="Reward multiplier (e.g. 1.25)",
-    )
-    @command_requires("manage_guild")
-    async def addrod(
-        interaction: discord.Interaction, level: int, price: int, multiplier: float
-    ):
-
-        rod_shop[level] = (price, multiplier)
-        add_rod_to_shop(level, price, multiplier)
-        await interaction.response.send_message(
-            f"🎣 Rod {level} added: {price} coins, {multiplier}× reward.",
-            ephemeral=True,
-        )
-
+    # Dynamic rod additions are disabled; rods are defined in code (config.ROD_SHOP).
     @bot.tree.command(name="rodshop", description="Show available fishing rods")
     async def rodshop(inter: discord.Interaction):
         if not rod_shop:
@@ -331,10 +309,9 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
             return
         if amount < 0:
             await interaction.response.send_message(
-                "Amount must be \u2265 0.", ephemeral=True
+                "Amount must be ≥ 0.", ephemeral=True
             )
             return
-
         uid = str(interaction.user.id)
         register_user(uid, interaction.user.display_name)
         userstats = get_stats(uid)
@@ -350,18 +327,37 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
         _execute = __import__("db.DBHelper", fromlist=["_execute"])._execute
         _execute(f"UPDATE users SET {stat} = ? WHERE user_id = ?", (rest, uid))
         await interaction.response.send_message(
-            f"\u2705 Removed from {interaction.user.display_name}'s **{stat}** **{amount}** stats points and added **{endMoney}** coins to your balance.",
+            f"✅ Removed from {interaction.user.display_name}'s **{stat}** **{amount}** stats points and added **{endMoney}** coins to your balance.",
             ephemeral=True,
         )
 
+    @bot.tree.command(name="myrod", description="Show your fishing rod")
+    async def myrod(
+        interaction: discord.Interaction, user: discord.Member | None = None
+    ):
+        target = user or interaction.user
+        register_user(str(target.id), target.display_name)
+        rod_level = get_rod_level(str(target.id))
+        multiplier = get_rod_multiplier(rod_level)
+        if rod_level == 0:
+            desc = "You don't own a fishing rod."
+        else:
+            desc = f"Rod {rod_level} – {multiplier:.2f}× rewards"
+        embed = discord.Embed(
+            title=f"{target.display_name}'s Rod",
+            description=desc,
+            color=discord.Color.teal(),
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=(user is None))
+
     return (
+        myrod,
         stats_cmd,
         quest,
         buypoints,
         allocate,
         fish,
         buyrod,
-        addrod,
         rodshop,
         refund,
     )

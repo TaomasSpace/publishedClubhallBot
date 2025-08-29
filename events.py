@@ -11,7 +11,6 @@ import random
 
 from db.initializeDB import init_db
 from db.DBHelper import (
-    get_all_rods_from_shop,
     delete_custom_role,
     get_custom_role,
     _fetchone,
@@ -26,8 +25,9 @@ from db.DBHelper import (
     get_log_channel,
 )
 from utils import get_channel_webhook
+from config import ROD_SHOP
 
-rod_shop: dict[int, tuple[int, float]] = {}
+rod_shop: dict[int, tuple[int, float]] = ROD_SHOP.copy()
 active_giveaway_tasks: dict[int, asyncio.Task] = {}
 filtered_violations: dict[int, dict[int, list[float]]] = {}
 trigger_responses: dict[int, dict[str, str]] = {}
@@ -102,7 +102,7 @@ async def load_giveaways(bot: commands.Bot):
 async def on_ready(bot: commands.Bot):
     init_db()
     global rod_shop, trigger_responses
-    rod_shop = get_all_rods_from_shop()
+    rod_shop = ROD_SHOP.copy()
     trigger_responses = {g.id: get_trigger_responses(g.id) for g in bot.guilds}
     await bot.tree.sync()
     await load_giveaways(bot)
