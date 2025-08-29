@@ -22,3 +22,21 @@ The wizard explains every step, lets you skip anything, and sets up channels
 and anti-nuke options. For role shortcuts and command restrictions it points
 you to the `/setrole` and `/setcommandrole` commands for later use.
 
+## Environment variables
+
+The bot and the Top.gg webhook server rely on the following environment variables:
+
+* `DISCORD_TOKEN` – Discord bot token.
+* `TOPGG_AUTH` – token used to validate incoming Top.gg votes.
+* `PORT` – optional port for the webhook server (defaults to 80).
+
+Example start command:
+
+```bash
+export DISCORD_TOKEN=<your_token>
+export TOPGG_AUTH=<topgg_webhook_token>
+python bot.py
+```
+
+`bot.py` automatically launches `server.js` so the webhook is ready whenever the bot runs.
+
