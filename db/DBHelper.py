@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sqlite3
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
@@ -129,7 +131,9 @@ def get_stats(user_id: str):
         (user_id,),
     )
     if not row:
-        return {s: 1 for s in STAT_NAMES} | {"stat_points": 0}
+        stats = {s: 1 for s in STAT_NAMES}
+        stats["stat_points"] = 0
+        return stats
     return dict(zip(STAT_NAMES + ["stat_points"], row))
 
 

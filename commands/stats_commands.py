@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import discord
 from discord import app_commands
 from discord.ext import commands
+from typing import Optional
 from datetime import datetime, timedelta
 from random import choice, randint, random
 from config import (
@@ -51,7 +54,7 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
 
     @bot.tree.command(name="stats", description="Show your stats & unspent points")
     async def stats_cmd(
-        interaction: discord.Interaction, user: discord.Member | None = None
+        interaction: discord.Interaction, user: Optional[discord.Member] = None
     ):
         target = user or interaction.user
         register_user(str(target.id), target.display_name)
@@ -333,7 +336,7 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
 
     @bot.tree.command(name="myrod", description="Show your fishing rod")
     async def myrod(
-        interaction: discord.Interaction, user: discord.Member | None = None
+        interaction: discord.Interaction, user: Optional[discord.Member] = None
     ):
         target = user or interaction.user
         register_user(str(target.id), target.display_name)
