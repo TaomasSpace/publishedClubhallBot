@@ -40,7 +40,9 @@ events.setup(bot, lowercase_locked)
 anti_nuke.setup(bot)
 
 # Read the Discord token from an environment variable
-TOKEN = os.getenv("DISCORD_TOKEN")
+with open("code.txt", "r") as file:
+    TOKEN = file.read().strip()
+
 if not TOKEN:
     raise RuntimeError("DISCORD_TOKEN environment variable not set")
 

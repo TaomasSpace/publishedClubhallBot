@@ -1,10 +1,11 @@
 const express = require("express");
 const app = express();
-
 // Allow port/token to be configured through environment variables.
 const PORT = process.env.PORT || 80; // oder 443 mit HTTPS
-const TOPGG_AUTH = process.env.TOPGG_AUTH; // exakt derselbe Token wie auf top.gg
 
+const fs = require("fs");
+
+const TOPGG_AUTH = fs.readFileSync("topgg.txt", "utf8").trim();
 // Express has built-in JSON body parsing.
 app.use(express.json());
 
