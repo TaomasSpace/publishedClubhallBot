@@ -1,8 +1,7 @@
-const https = require("https");
-const fs = require("fs");
 const express = require("express");
+const bodyParser = require("body-parser");
 const app = express();
-app.use(bodyParser.json());               // oder 443 mit HTTPS
+const PORT = 80;                 // oder 443 mit HTTPS
 
 const TOPGG_AUTH = "lS6lvCvcDdDKklWoUHLLjtz10g0eZCW8"; // exakt derselbe Token wie auf top.gg
 
@@ -20,11 +19,3 @@ app.post("/vote", (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`Webhook läuft auf Port ${PORT}`));
-
-const options = {
-    key: fs.readFileSync("/etc/letsencrypt/live/clubhallbot.duckdns.org/privkey.pem"),
-    cert: fs.readFileSync("/etc/letsencrypt/live/clubhallbot.duckdns.org/fullchain.pem")
-};
-https.createServer(options, app).listen(443, () =>
-    console.log("HTTPS‑Webhook läuft auf Port 443")
-);
