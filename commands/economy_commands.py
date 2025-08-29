@@ -482,6 +482,13 @@ async def start_poker_game(
 
 
 def setup(bot: commands.Bot):
+    @bot.tree.command(name="vote", description="Get the Top.gg vote link")
+    async def vote(interaction: discord.Interaction):
+        await interaction.response.send_message(
+            "Vote for the bot and earn coins!\nhttps://top.gg/bot/1401961800504971316/vote",
+            ephemeral=True,
+        )
+
     @bot.tree.command(name="money", description="Check your clubhall coin balance")
     async def money(interaction: discord.Interaction):
         user_id = str(interaction.user.id)
