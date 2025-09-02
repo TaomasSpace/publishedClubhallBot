@@ -141,7 +141,6 @@ from db.DBHelper import (
 )
 
 
-
 class RequestView(ui.View):
     def __init__(self, sender_id: int, receiver_id: int, amount: int):
         super().__init__(timeout=60)
@@ -486,7 +485,7 @@ def setup(bot: commands.Bot):
     async def vote(interaction: discord.Interaction):
         await interaction.response.send_message(
             "Vote for the bot and earn coins!\nhttps://top.gg/bot/1401961800504971316/vote",
-            ephemeral=True,
+            ephemeral=False,
         )
 
     @bot.tree.command(name="money", description="Check your clubhall coin balance")
