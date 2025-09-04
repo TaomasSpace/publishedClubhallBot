@@ -26,7 +26,11 @@ def init_db():
             stat_points INTEGER DEFAULT 0,
             intelligence INTEGER DEFAULT 1,
             strength INTEGER DEFAULT 1,
-            stealth INTEGER DEFAULT 1
+            stealth INTEGER DEFAULT 1,
+            xp INTEGER DEFAULT 0,
+            level INTEGER DEFAULT 1,
+            last_message_xp TEXT,
+            last_weekly TEXT
         )
     """
     )
@@ -275,9 +279,18 @@ def init_db():
         ("intelligence", 1),
         ("strength", 1),
         ("stealth", 1),
+        ("xp", 0),
+        ("level", 1),
+        ("last_message_xp", ""),
     ]:
         if col not in existing:
-            if col in ("last_quest", "last_weekly", "last_fishing", "last_superpower"):
+            if col in (
+                "last_quest",
+                "last_weekly",
+                "last_fishing",
+                "last_superpower",
+                "last_message_xp",
+            ):
                 cursor.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT")
             else:
                 cursor.execute(

@@ -122,6 +122,43 @@ def set_last_claim(user_id: str, ts: datetime):
     conn.close()
 
 
+# ---------- xp & levels ----------
+
+
+def xp_for_next_level(level: int) -> int:
+    return 5 * level * level + 50 * level + 100
+
+
+def get_level_and_xp(user_id: str) -> tuple[int, int]:
+    row = _fetchone("SELECT level, xp FROM users WHERE user_id = ?", (user_id,))
+    if row:
+        return row[0], row[1]
+    return 1, 0
+
+
+def add_xp(user_id: str, amount: int) -> tuple[int, int, bool, int]:
+    level, xp = get_level_and_xp(user_id)
+    leveled = False
+    coins = 0
+    if amount > 0:
+        xp += amount
+        required = xp_for_next_level(level)
+        while xp >= required:
+            xp -= required
+            level += 1
+            reward = level * 10
+            coins += reward
+            required = xp_for_next_level(level)
+            leveled = True
+        _execute(
+            "UPDATE users SET xp = ?, level = ? WHERE user_id = ?",
+            (xp, level, user_id),
+        )
+        if coins:
+            safe_add_coins(user_id, coins)
+    return level, xp, leveled, coins
+
+
 # ---------- stats & stat‑points ----------
 
 

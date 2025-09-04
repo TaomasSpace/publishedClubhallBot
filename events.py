@@ -25,6 +25,10 @@ from db.DBHelper import (
     get_booster_channel,
     get_booster_message,
     get_log_channel,
+    get_timestamp,
+    set_timestamp,
+    register_user,
+    add_xp,
 )
 from utils import get_channel_webhook
 from config import ROD_SHOP
@@ -197,6 +201,18 @@ async def on_message(
     if message.author.bot:
         return
     update_date(message.author.id, message.author.name)
+    uid = str(message.author.id)
+    register_user(uid, message.author.display_name)
+    last = get_timestamp(uid, "last_message_xp")
+    now = datetime.utcnow()
+    if not last or (now - last).total_seconds() >= 15:
+        gained = len(message.content) // 10
+        level, _, leveled, coins = add_xp(uid, gained)
+        set_timestamp(uid, "last_message_xp", now)
+        if leveled:
+            await message.channel.send(
+                f"🎉 {message.author.mention} reached level {level} and earned {coins} coins!"
+            )
     await bot.process_commands(message)
 
 
@@ -406,6 +422,13 @@ def _format_option(opt: dict, users_data: dict) -> str:
 async def on_app_command_completion(
     bot: commands.Bot, inter: discord.Interaction, command: app_commands.Command
 ):
+    uid = str(inter.user.id)
+    register_user(uid, inter.user.display_name)
+    level, _, leveled, coins = add_xp(uid, 5)
+    if leveled and inter.channel:
+        await inter.channel.send(
+            f"🎉 {inter.user.mention} reached level {level} and earned {coins} coins!"
+        )
     cid = get_log_channel(inter.guild.id) if inter.guild else None
     log_ch = bot.get_channel(cid) if cid else None
     if not log_ch:
@@ -423,6 +446,16 @@ async def on_app_command_completion(
     embed.add_field(name="Channel", value=inter.channel.mention, inline=False)
     embed.add_field(name="Options", value=opts, inline=False)
     await log_ch.send(embed=embed)
+
+
+async def on_command_completion(bot: commands.Bot, ctx: commands.Context):
+    uid = str(ctx.author.id)
+    register_user(uid, ctx.author.display_name)
+    level, _, leveled, coins = add_xp(uid, 5)
+    if leveled:
+        await ctx.send(
+            f"🎉 {ctx.author.mention} reached level {level} and earned {coins} coins!"
+        )
 
 
 def setup(bot: commands.Bot, lowercase_locked: dict[int, set[int]]):
@@ -445,6 +478,9 @@ def setup(bot: commands.Bot, lowercase_locked: dict[int, set[int]]):
         inter: discord.Interaction, command: app_commands.Command
     ):
         await on_app_command_completion(bot, inter, command)
+
+    async def text_command_completion_wrapper(ctx: commands.Context):
+        await on_command_completion(bot, ctx)
 
     async def reaction_add_wrapper(payload: discord.RawReactionActionEvent):
         await on_raw_reaction_add(bot, payload)
@@ -469,4 +505,5 @@ def setup(bot: commands.Bot, lowercase_locked: dict[int, set[int]]):
     bot.add_listener(reaction_remove_wrapper, name="on_raw_reaction_remove")
     bot.tree.error(app_error_wrapper)
     bot.add_listener(command_completion_wrapper, name="on_app_command_completion")
+    bot.add_listener(text_command_completion_wrapper, name="on_command_completion")
     bot.add_listener(command_error_wrapper, name="on_command_error")
