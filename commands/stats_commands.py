@@ -25,6 +25,8 @@ from db.DBHelper import (
     set_rod_level,
     get_money,
     set_money,
+    get_level_and_xp,
+    xp_for_next_level,
 )
 
 rod_shop: dict[int, tuple[int, float]] = {}
@@ -67,6 +69,19 @@ def setup(bot: commands.Bot, shop: dict[int, tuple[int, float]]):
         )
         embed.set_footer(text=f"Unspent points: {stats['stat_points']}")
         await interaction.response.send_message(embed=embed, ephemeral=(user is None))
+
+    @bot.tree.command(name="level", description="Show your level and XP")
+    async def level_cmd(
+        interaction: discord.Interaction, user: Optional[discord.Member] = None
+    ):
+        target = user or interaction.user
+        register_user(str(target.id), target.display_name)
+        level, xp = get_level_and_xp(str(target.id))
+        needed = xp_for_next_level(level)
+        await interaction.response.send_message(
+            f"Level {level} – {xp}/{needed} XP",
+            ephemeral=(user is None),
+        )
 
     @bot.tree.command(
         name="quest", description="Complete a short quest to earn stat-points (3?h CD)"
